@@ -1,0 +1,24 @@
+{
+  "name": "cadence",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "athloi exec npm install"
+  },
+  "workspaces": ["packages/*"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quarterto/cadence.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/quarterto/cadence/issues"
+  },
+  "homepage": "https://github.com/quarterto/cadence#readme",
+  "devDependencies": {
+    "@financial-times/athloi": "^1.0.0-beta.27"
+  }
+}
