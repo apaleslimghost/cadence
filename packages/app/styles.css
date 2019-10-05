@@ -1,0 +1,70 @@
+@import 'codemirror/lib/codemirror.css';
+
+html, body {
+    overflow: hidden;
+    height: 100%;
+}
+
+body {
+    background: #212121;
+    margin: 0;
+    margin-top: 20px;
+}
+
+body:fullscreen {
+    background: red;
+}
+
+body::before {
+    content: '';
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    -webkit-app-region:drag;
+}
+
+#editor, .CodeMirror {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    bottom: 0;
+    width: 70%;
+    height: auto;
+}
+
+#output {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30%;
+    height: auto;
+    padding: 23px 3px 3px;
+    background: #171717;
+    margin: 0;
+}
+
+.CodeMirror {
+    background: transparent;
+}
+
+.CodeMirror, #output {
+    color: #dadee0;
+    font-family: 'Iosevka', monospace;
+}
+
+.CodeMirror-cursor {
+    border-color: #dadee0;
+}
+
+.CodeMirror-gutters {
+    background: #171717;
+    border: 0 none;
+}
+
+.CodeMirror-linenumbers {
+    min-width: 32px;
+}
