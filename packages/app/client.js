@@ -22,6 +22,18 @@ function createEditor() {
         dragDrop: false,
         extraKeys: {
             'Shift-Enter': createEditor,
+            'Shift-Up'() {
+                const index = editors.indexOf(cm)
+                if(index > 0) {
+                    editors[index - 1].focus()
+                }
+            },
+            'Shift-Down'() {
+                const index = editors.indexOf(cm)
+                if(index < editors.length - 1) {
+                    editors[index + 1].focus()
+                }
+            }
         }
     })
 
