@@ -1,5 +1,7 @@
 @import 'codemirror/lib/codemirror.css';
 
+* { box-sizing: border-box; }
+
 html, body {
     overflow: hidden;
     height: 100%;
@@ -9,10 +11,6 @@ body {
     background: #212121;
     margin: 0;
     margin-top: 20px;
-}
-
-body:fullscreen {
-    background: red;
 }
 
 body::before {
@@ -26,13 +24,13 @@ body::before {
     -webkit-app-region:drag;
 }
 
-#editor, .CodeMirror {
+#editor {
     position: absolute;
     top: 20px;
     left: 0;
     bottom: 0;
     width: 70%;
-    height: auto;
+    padding: 6px;
 }
 
 #output {
@@ -48,7 +46,14 @@ body::before {
 }
 
 .CodeMirror {
-    background: transparent;
+    height: auto;
+    background: #171717;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.CodeMirror-scroll {
+    height: auto;
 }
 
 .CodeMirror, #output {
