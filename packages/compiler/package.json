@@ -4,13 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodemon -w index.js -w test.cl -- -pe 'util.inspect(require(\"./\")(fs.readFileSync(\"test.cl\", \"utf8\")), {depth: null, colors: true})'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "immer": "^4.0.1",
-    "sexpr-plus": "^7.0.0"
+    "s-expression": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.3"
   }
 }

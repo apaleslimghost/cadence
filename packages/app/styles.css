@@ -48,9 +48,13 @@ body::before {
 
 .CodeMirror {
     height: auto;
-    background: #171717;
+    background: #17171770;
     border-radius: 4px;
     margin-bottom: 10px;
+}
+
+.CodeMirror-focused {
+    background: #171717;
 }
 
 .CodeMirror-scroll {
