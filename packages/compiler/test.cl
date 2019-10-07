@@ -1,3 +1,7 @@
-(macro five (a) `(,a))
+(macro defun (name args body) 
+       `(def ,name (λ ,args ,body))
+)
 
-(five 5)
+(defun foo (a) a)
+
+(foo 5)
