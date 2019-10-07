@@ -1,14 +1,14 @@
 import CodeMirror from 'codemirror'
-import parinfer from 'parinfer-codemirror'
+import parinferCodeMirror from 'parinfer-codemirror'
 import compiler from '@cadence/compiler'
 
 const output = document.getElementById('output')
 const editor = document.getElementById('editor')
-const editors = []
+const contents = new Map()
 
 function compile() {
     output.innerHTML = JSON.stringify(
-        editors.map(editor => compiler(editor.getValue())),
+        Array.from(contents.values(), compiler),
         null, 2
     )
 }
@@ -37,9 +37,11 @@ function createEditor() {
         }
     })
 
-    parinfer.init(cm)
-    cm.on('change', compile)
-    editors.push(cm)
+    parinferCodeMirror.init(cm, 'indent')
+    cm.on('change', () => {
+        contents.set(cm, cm.getValue())
+        requestAnimationFrame(compile)
+    })
 }
 
 createEditor()
