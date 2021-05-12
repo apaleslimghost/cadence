@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@cadence/compiler": "file:../compiler",
-    "codemirror": "^5.49.0",
+    "codemirror": "^5.58.2",
     "parinfer-codemirror": "^1.4.2"
   }
 }
