@@ -101,3 +101,5 @@ const defaultScope: Scope = {
   ">=":  (a: any, b: any) => a >= b,
   "<=":  (a: any, b: any) => a <= b,
 };
+
+export default (input: string) => evaluate(parse(input), defaultScope, 'root')
