@@ -1,38 +1,22 @@
-import parse from "s-expression";
+import parse, { Atom, type SExpr } from "s-expression";
 
 const DEBUG = false;
 
-const specials = {
+type Scope = Record<string, unknown>
+
+const specials: Record<string, (expr: SExpr, scope: Scope) => any> = {
   quote(tail) {
     return tail[0];
   },
 
-  quasiquote: function quasiquote([expression], scope) {
+  quasiquote([expression], scope) {
     if (Array.isArray(expression)) {
       const [head, ...tail] = expression;
       if (head === "unquote") return evaluate(tail[0], scope, "quasi unquote");
-      return expression.map(x => quasiquote([x], scope));
+      return expression.map(x => specials.quasiquote([x], scope));
     }
 
     return expression;
-  },
-
-  macro([name, argnames, body], scope) {
-    scope[name] = (...args) =>
-      evaluate(
-        evaluate(body, {
-          ...scope,
-          ...argnames.reduce(
-            (env, name, index) => ({
-              ...env,
-              [name]: args[index],
-            }),
-            {},
-          ),
-        }, "macro body"),
-        scope,
-        "macro result",
-      );
   },
 
   if([condition, yes, no], scope) {
@@ -42,7 +26,12 @@ const specials = {
   },
 
   λ([argnames, body], scope) {
-    return (...args) =>
+    if(!(typeof name === 'string')) throw new Error('macro name must be a string')
+    if(!Array.isArray(argnames) || ! argnames.every(
+      arg => typeof arg === 'string'
+    )) throw new Error('argnames must be a bare list of strings')
+
+    return (...args: SExpr[]) =>
       evaluate(body, {
         ...scope,
         ...argnames.reduce(
@@ -56,10 +45,9 @@ const specials = {
   },
 
   def([name, value], scope) {
-    const val = evaluate(value, scope, "def");
-    if (DEBUG) console.log("DEF", name, val, scope);
+    if(!(typeof name === 'string')) throw new Error('name must be a string')
 
-    return scope[name] = val;
+    return scope[name] = evaluate(value, scope, "def");
   },
 
   do(exprs, scope) {
@@ -71,19 +59,19 @@ const specials = {
   },
 };
 
-const serialise = expression =>
+const serialise = (expression: Atom): string =>
   Array.isArray(expression)
     ? `(${expression.map(serialise).join(" ")})`
-    : expression;
+    : expression.valueOf();
 
-const evaluate = (expression, scope, debug) => {
+const evaluate = (expression: Atom, scope: Scope, debug?: string): unknown => {
   if (DEBUG) console.log("EVAL", serialise(expression), scope, debug);
   if (Array.isArray(expression)) {
     const [head, ...tail] = expression;
-    if (specials[head]) return specials[head](tail, scope);
+    if (typeof head === 'string' && specials[head]) return specials[head](tail, scope);
 
     const fn = evaluate(head, scope, "function");
-    if (!fn) {
+    if (typeof fn !== 'function') {
       throw new Error(`${serialise(head)} is not a function`);
     }
 
@@ -100,16 +88,16 @@ const evaluate = (expression, scope, debug) => {
 
 const cells = [];
 
-const defaultScope = {
-  p: (...args) => (console.log(...args), args),
+const defaultScope: Scope = {
+  p: (...args: unknown[]) => (console.log(...args), args),
   nil: false,
   t: true,
-  "*": (...args) => args.reduce((a, b) => a * b),
-  "+": (...args) => args.reduce((a, b) => a + b),
-  "-": (a, b) => a - b,
-  "/": (a, b) => a / b,
-  ">": (a, b) => a > b,
-  "<": (a, b) => a < b,
-  ">=": (a, b) => a >= b,
-  "<=": (a, b) => a <= b,
+  "*": (...args: number[]) => args.reduce((a, b) => a * b),
+  "+": (...args: number[]) => args.reduce((a, b) => a + b),
+  "-": (a: number, b: number) => a - b,
+  "/":  (a: number, b: number) => a / b,
+  ">":  (a: any, b: any) => a > b,
+  "<":  (a: any, b: any) => a < b,
+  ">=":  (a: any, b: any) => a >= b,
+  "<=":  (a: any, b: any) => a <= b,
 };
