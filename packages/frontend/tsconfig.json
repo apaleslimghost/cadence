@@ -1,7 +1,12 @@
 {
-  "files": [],
+  "extends": "../../tsconfig.settings.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./lib"
+  },
   "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+    {
+      "path": "../compiler"
+    }
   ]
 }
