@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "npm run dev -w packages/frontend"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quarterto/cadence.git"
@@ -14,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/quarterto/cadence/issues"
   },
-  "homepage": "https://github.com/quarterto/cadence#readme"
+  "homepage": "https://github.com/quarterto/cadence#readme",
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.1"
+  }
 }
