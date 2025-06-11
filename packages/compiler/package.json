@@ -2,7 +2,7 @@
   "name": "@cadence/compiler",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "nodemon -w index.js -w test.cl -- -pe 'util.inspect(require(\"./\")(fs.readFileSync(\"test.cl\", \"utf8\")), {depth: null, colors: true})'"
   },

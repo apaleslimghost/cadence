@@ -1,4 +1,5 @@
 {
+	"files": [],
 	"references": [
 		{ "path": "packages/compiler"},
 		{ "path": "packages/frontend"}

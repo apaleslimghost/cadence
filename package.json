@@ -7,7 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "start": "npm run dev -w packages/frontend"
+    "start": "npm run dev -w packages/frontend",
+    "build": "tsc --build"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
   },
   "homepage": "https://github.com/quarterto/cadence#readme",
   "devDependencies": {
-    "@tsconfig/node24": "^24.0.1"
+    "@tsconfig/node24": "^24.0.1",
+    "typescript": "^5.8.3"
   }
 }

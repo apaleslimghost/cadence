@@ -102,4 +102,8 @@ const defaultScope: Scope = {
   "<=":  (a: any, b: any) => a <= b,
 };
 
-export default (input: string) => evaluate(parse(input), defaultScope, 'root')
+export default (input: string) => {
+  const tree = parse(input)
+  if(tree instanceof Error) throw tree
+  return evaluate(tree, defaultScope, 'root')
+}
