@@ -1,8 +1,14 @@
-import parse, { Atom, type SExpr } from "s-expression";
+import parse, { type Atom, type SExpr } from "s-expression";
 
 const DEBUG = false;
 
 type Scope = Record<string, unknown>
+
+parse.Parser.quotes = /['`,←]/;
+parse.Parser.quotes_map = {
+  ...parse.Parser.quotes_map,
+  '←': 'subscribe'
+}
 
 const specials: Record<string, (expr: SExpr, scope: Scope) => any> = {
   quote(tail) {
