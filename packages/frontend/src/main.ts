@@ -4,7 +4,7 @@ import 'handsontable/styles/ht-theme-main.min.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import { BehaviorSubject, combineLatest, interval, isObservable, map, mergeMap, Observable, of, share, Subscriber, Subscription, switchMap, tap, type OperatorFunction } from 'rxjs';
+import { BehaviorSubject, combineLatest, filter, interval, isObservable, map, mergeMap, Observable, of, share, Subscriber, Subscription, switchMap, tap, type OperatorFunction } from 'rxjs';
 import pick from 'lodash/pick'
 import mapValues from 'lodash/mapValues';
 
@@ -41,7 +41,16 @@ Handsontable.cellTypes.registerCellType('lisp', {
 
     if(value) {
       cellSubscriptions[cellKey] ??= readCell(cellKey).subscribe(
-        result =>  td.textContent = result as string
+        result => {
+          td.textContent = result as string
+          td.animate([
+            { background: '#80D8FF' },
+            { boxShadow: 'transparent' },
+          ], {
+            duration: 200,
+            easing: 'ease-out'
+          })
+        }
       )
     } else {
       cellSubscriptions[cellKey]?.unsubscribe()
@@ -66,7 +75,8 @@ const rxlib = {
   },
   '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
     map((args) => args.reduce((a, b) => a * b))
-  )
+  ),
+  '//': (obs: Observable<unknown>, n: number) => obs.pipe(filter((_, i) => (i % n) === 0))
 }
 
 const rxspec = {
