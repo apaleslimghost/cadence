@@ -57,13 +57,19 @@ Handsontable.cellTypes.registerCellType('lisp', {
 
 const root = document.getElementById('root')!
 
+type MaybeObsvervable<T> = Observable<T> | T
+const toObservable = <T>(v: MaybeObsvervable<T>) => isObservable(v) ? v : new BehaviorSubject(v)
+
 const rxlib = {
   map,
   of,
   cellEvents,
   //@ts-expect-error idc
   '→': (head: Observable<unknown>, ...tail: OperatorFunction<unknown, unknown>[]) => head.pipe(...tail),
-  interval
+  interval,
+  '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
+    map((args) => args.reduce((a, b) => a * b))
+  )
 }
 
 const rxspec = {
@@ -101,7 +107,7 @@ new Handsontable(root, {
 
           replaceCell(cellKey, {
             source: newValue,
-            result: isObservable(result) ? result : new BehaviorSubject(result)
+            result: toObservable(result)
           })
         }
       },
