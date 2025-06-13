@@ -4,7 +4,7 @@ import 'handsontable/styles/ht-theme-main.min.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import { BehaviorSubject, combineLatest, interval, isObservable, map, mergeMap, Observable, of, switchMap, tap, type OperatorFunction } from 'rxjs';
+import { BehaviorSubject, combineLatest, interval, isObservable, map, mergeMap, Observable, of, share, Subscriber, Subscription, switchMap, tap, type OperatorFunction } from 'rxjs';
 import pick from 'lodash/pick'
 import mapValues from 'lodash/mapValues';
 
@@ -12,31 +12,21 @@ import evaluate from '@cadence/compiler'
 
 registerAllModules();
 
-type Cell<T> = {
-  source: string,
-  result: Observable<T>
+const cells: Record<string, BehaviorSubject<Observable<unknown>>> = {}
+const cellSubscriptions: Record<string, Subscription> = {}
+
+function getCell(key: string) {
+  return (cells[key] ??= new BehaviorSubject(of('' as unknown)))
 }
 
-type Cells = Record<string, BehaviorSubject<Cell<unknown>>>
-
-const store = new BehaviorSubject<Cells>({})
-
-const cellEvents = (cellKeys: string[]) => store.pipe(
-  switchMap(cells => combineLatest(pick(cells, cellKeys)).pipe(
-    mergeMap(cells => combineLatest(mapValues(cells, cell => cell.result)))
-  )),
-  tap(console.log.bind(console, cellKeys))
-);
-
-function replaceCell(key: string, cell: Cell<unknown>) {
-  store.next({
-    ...store.value,
-    [key]: new BehaviorSubject(cell)
-  })
+function readCell(key: string) {
+  return getCell(key).pipe(
+    switchMap(o => o),
+  )
 }
 
-function updateCell(key: string, cell: Cell<unknown>) {
-  store.value[key].next(cell)
+function replaceCell(key: string, cell: Observable<unknown>) {
+  getCell(key).next(cell)
 }
 
 const colLetter = (col: number): string =>
@@ -49,8 +39,8 @@ Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
-    cellEvents([cellKey]).subscribe(
-      result =>  td.textContent = result[cellKey] as string
+    cellSubscriptions[cellKey] ??= readCell(cellKey).subscribe(
+      result =>  td.textContent = result as string
     )
   },
 });
@@ -63,19 +53,18 @@ const toObservable = <T>(v: MaybeObsvervable<T>) => isObservable(v) ? v : new Be
 const rxlib = {
   map,
   of,
-  cellEvents,
   //@ts-expect-error idc
   '→': (head: Observable<unknown>, ...tail: OperatorFunction<unknown, unknown>[]) => head.pipe(...tail),
-  interval,
+  interval(...args: Parameters<typeof interval>) {
+    return interval(...args).pipe(share())
+  },
   '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
     map((args) => args.reduce((a, b) => a * b))
   )
 }
 
 const rxspec = {
-  subscribe: (key: string) => {
-    return cellEvents([key]).pipe(map(cells => cells[key]))
-  },
+  subscribe: readCell
 }
 
 new Handsontable(root, {
@@ -105,10 +94,7 @@ new Handsontable(root, {
             console.log(error)
           }
 
-          replaceCell(cellKey, {
-            source: newValue,
-            result: toObservable(result)
-          })
+          replaceCell(cellKey, toObservable(result))
         }
       },
       licenseKey: "non-commercial-and-evaluation"
