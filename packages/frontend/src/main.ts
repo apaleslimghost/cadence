@@ -4,7 +4,7 @@ import 'handsontable/styles/ht-theme-main.min.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import { BehaviorSubject, combineLatest, filter, interval, isObservable, map, mergeMap, Observable, of, share, Subscriber, Subscription, switchMap, tap, type OperatorFunction } from 'rxjs';
+import { asyncScheduler, BehaviorSubject, combineLatest, filter, from, interval, isObservable, map, mergeMap, Observable, observeOn, of, repeat, share, shareReplay, Subscriber, Subscription, switchMap, tap, zip, type OperatorFunction } from 'rxjs';
 import pick from 'lodash/pick'
 import mapValues from 'lodash/mapValues';
 
@@ -45,7 +45,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
           td.textContent = result as string
           td.animate([
             { background: '#80D8FF' },
-            { boxShadow: 'transparent' },
+            { background: 'transparent' },
           ], {
             duration: 200,
             easing: 'ease-out'
@@ -71,12 +71,21 @@ const rxlib = {
   //@ts-expect-error idc
   '→': (head: Observable<unknown>, ...tail: OperatorFunction<unknown, unknown>[]) => head.pipe(...tail),
   interval(...args: Parameters<typeof interval>) {
-    return interval(...args).pipe(share())
+    return interval(...args).pipe(shareReplay(1))
   },
+  clock: (bpm: number) => rxlib.interval(60 * 1000 / bpm),
   '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
     map((args) => args.reduce((a, b) => a * b))
   ),
-  '//': (obs: Observable<unknown>, n: number) => obs.pipe(filter((_, i) => (i % n) === 0))
+  '//': (obs: Observable<unknown>, n: number) => obs.pipe(filter((_, i) => (i % n) === 0), share()),
+  seq: (...events: unknown[]) => from(events).pipe(
+    observeOn(asyncScheduler),
+    repeat()
+  ),
+  '*>': (a: Observable<unknown>, b: Observable<unknown>) => zip(a, b).pipe(
+    map(([_, b]) => b),
+    share()
+  )
 }
 
 const rxspec = {
