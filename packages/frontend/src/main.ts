@@ -4,7 +4,7 @@ import 'handsontable/styles/ht-theme-main.min.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import { BehaviorSubject, combineLatest, mergeMap, Observable, of, switchMap } from 'rxjs';
+import { BehaviorSubject, combineLatest, interval, isObservable, map, mergeMap, Observable, of, switchMap, tap, type OperatorFunction } from 'rxjs';
 import pick from 'lodash/pick'
 import mapValues from 'lodash/mapValues';
 
@@ -24,7 +24,8 @@ const store = new BehaviorSubject<Cells>({})
 const cellEvents = (cellKeys: string[]) => store.pipe(
   switchMap(cells => combineLatest(pick(cells, cellKeys)).pipe(
     mergeMap(cells => combineLatest(mapValues(cells, cell => cell.result)))
-  ))
+  )),
+  tap(console.log.bind(console, cellKeys))
 );
 
 function replaceCell(key: string, cell: Cell<unknown>) {
@@ -46,7 +47,7 @@ const colLetter = (col: number): string =>
 
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
-    const cellKey = colLetter(column) + row.toString(10)
+    const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
     cellEvents([cellKey]).subscribe(
       result =>  td.textContent = result[cellKey] as string
@@ -55,6 +56,21 @@ Handsontable.cellTypes.registerCellType('lisp', {
 });
 
 const root = document.getElementById('root')!
+
+const rxlib = {
+  map,
+  of,
+  cellEvents,
+  //@ts-expect-error idc
+  '→': (head: Observable<unknown>, ...tail: OperatorFunction<unknown, unknown>[]) => head.pipe(...tail),
+  interval
+}
+
+const rxspec = {
+  subscribe: (key: string) => {
+    return cellEvents([key]).pipe(map(cells => cells[key]))
+  },
+}
 
 new Handsontable(root, {
       className: "ht-theme-main-dark-auto",
@@ -72,19 +88,20 @@ new Handsontable(root, {
       autoColumnSize: false,
       afterChange: (changes) => {
         for(const [row, column, oldValue, newValue] of changes ?? []) {
-          console.log({ row, column, oldValue, newValue })
-          const cellKey = colLetter(column as number) + row.toString(10)
+          if(oldValue === newValue) return
+
+          const cellKey = colLetter(1 + (column as number)) + (row + 1).toString(10)
           let result
 
           try {
-            result = evaluate(newValue)
+            result = evaluate(newValue, rxlib, rxspec)
           } catch(error) {
             console.log(error)
           }
 
           replaceCell(cellKey, {
             source: newValue,
-            result: of(result)
+            result: isObservable(result) ? result : new BehaviorSubject(result)
           })
         }
       },
