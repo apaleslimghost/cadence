@@ -11,7 +11,11 @@ import mapValues from 'lodash/mapValues';
 import evaluate from '@cadence/compiler'
 import { get } from 'lodash';
 
+
+
 registerAllModules();
+
+const ctx = new AudioContext()
 
 const cells: Record<string, BehaviorSubject<Observable<unknown>>> = {}
 const cellSubscriptions: Record<string, Subscription> = {}
@@ -36,6 +40,50 @@ const colLetter = (col: number): string =>
     : colLetter(Math.floor((col - 1) / 26)) +
       String.fromCharCode(((col - 1) % 26) + 65);
 
+class Oscilloscope {
+  private paused = false
+  private ctx: AudioContext
+  private src: AudioNode
+  private canvas: HTMLCanvasElement
+  private anl: AnalyserNode
+  private data: Uint8Array
+  private cctx: CanvasRenderingContext2D
+
+  constructor(ctx: AudioContext, src: AudioNode, canvas: HTMLCanvasElement){
+    this.ctx = ctx
+    this.src = src
+    this.canvas = canvas
+    this.anl    = this.ctx.createAnalyser();
+
+    this.anl.fftSize = 2048;
+    this.src.connect(this.anl);
+
+    this.data = new Uint8Array(2048);
+    this.cctx = this.canvas.getContext("2d")!;
+    this.cctx.strokeStyle = '#80D8FF';
+  }
+
+  clear() {
+    this.cctx.fillStyle   = 'white';
+  }
+
+  draw() {
+      requestAnimationFrame(() => this.draw());
+      this.cctx.clearRect(0 , 0, this.canvas.width, this.canvas.height);
+      this.anl.getByteTimeDomainData(this.data);
+
+      this.cctx.beginPath();
+      for(let i=0; i < this.data.length; i++){
+          const x = i * (this.canvas.width * 1.0 / this.data.length); // need to fix x
+          const v = this.data[i] / 128.0;
+          const y = v * this.canvas.height / 2;
+          if(i === 0) this.cctx.moveTo(x,y);
+          else this.cctx.lineTo(x,y);
+      }
+      this.cctx.stroke();
+  }
+}
+
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
@@ -43,7 +91,6 @@ Handsontable.cellTypes.registerCellType('lisp', {
     if(value) {
       cellSubscriptions[cellKey] ??= readCell(cellKey).subscribe(
         result => {
-          td.textContent = result as string
           td.animate([
             { background: '#80D8FF' },
             { background: 'transparent' },
@@ -51,6 +98,26 @@ Handsontable.cellTypes.registerCellType('lisp', {
             duration: 200,
             easing: 'ease-out'
           })
+
+          if(result instanceof AudioNode) {
+            let canvas = td.querySelector('canvas')
+            if(!canvas) {
+              canvas = document.createElement('canvas')
+              td.style.position = 'relative'
+              canvas.width = td.clientWidth
+              canvas.height = td.clientHeight
+              canvas.style.position = 'absolute'
+              canvas.style.top = '0'
+              canvas.style.left = '0'
+              td.replaceChildren(canvas)
+            }
+            const osc = new Oscilloscope(ctx, result, canvas)
+            osc.draw()
+          } else if(result) {
+            td.textContent = result as string
+          } else {
+            td.textContent = '💭'
+          }
         }
       )
     } else {
@@ -65,8 +132,6 @@ const root = document.getElementById('root')!
 
 type MaybeObsvervable<T> = Observable<T> | T
 const toObservable = <T>(v: MaybeObsvervable<T>) => isObservable(v) ? v : new BehaviorSubject(v)
-
-const ctx = new AudioContext()
 
 const rxlib = {
   map,
@@ -97,6 +162,7 @@ const rxlib = {
           map(sources => {
             sources.forEach(s => s?.connect(dest))
             sources_ = sources
+            return dest
           }),
           finalize(() => sources_.forEach(s => s.disconnect(dest)))
         )
