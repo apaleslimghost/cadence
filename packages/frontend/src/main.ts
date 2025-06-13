@@ -39,9 +39,15 @@ Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
-    cellSubscriptions[cellKey] ??= readCell(cellKey).subscribe(
-      result =>  td.textContent = result as string
-    )
+    if(value) {
+      cellSubscriptions[cellKey] ??= readCell(cellKey).subscribe(
+        result =>  td.textContent = result as string
+      )
+    } else {
+      cellSubscriptions[cellKey]?.unsubscribe()
+      delete cellSubscriptions[cellKey]
+      td.textContent = ''
+    }
   },
 });
 
