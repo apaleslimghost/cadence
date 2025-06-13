@@ -67,7 +67,7 @@ const evaluate = (expression, scope, specials) => {
         console.log("RETURN", serialise(expression), expression, typeof expression);
     if (expression instanceof String)
         return expression.valueOf();
-    if (/^\d*(\.\d+)?$/.test(expression))
+    if (/^\d+(\.\d+)?$/.test(expression))
         return parseFloat(expression);
     if (typeof expression === "string")
         return scope[expression];
