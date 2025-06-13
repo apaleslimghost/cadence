@@ -1,1 +1,0 @@
-{"root":["./packages/compiler/lib/index.d.ts","./packages/compiler/src/index.ts","./packages/compiler/types/s-expression.d.ts","./packages/frontend/vite.config.ts","./packages/frontend/src/app.tsx","./packages/frontend/src/main.tsx","./packages/frontend/src/vite-env.d.ts"],"errors":true,"version":"5.8.3"}
