@@ -177,7 +177,11 @@ const rxlib = {
       finalize(() => osc.stop())
     )
   },
-  'dest': ctx.destination
+  'dest': () => {
+    const gain = new GainNode(ctx)
+    gain.connect(ctx.destination)
+    return gain
+  }
 }
 
 const rxspec = {
