@@ -166,11 +166,14 @@ const rxlib = {
     )
   },
   'osc': (type: OscillatorType, freq: MaybeObsvervable<number>) => {
-    const osc = new OscillatorNode(ctx, { type })
-    osc.start()
-    return toObservable(freq).pipe(
-      map(f => (osc.frequency.setValueAtTime(f, ctx.currentTime), osc)),
-    )
+    return defer(() => {
+      const osc = new OscillatorNode(ctx, { type })
+      osc.start()
+      return toObservable(freq).pipe(
+        map(f => (osc.frequency.setValueAtTime(f, ctx.currentTime), osc)),
+        finalize(() => osc.stop())
+      )
+    })
   },
   'dest': () => {
     const gain = new GainNode(ctx)
