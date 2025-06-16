@@ -103,20 +103,16 @@ Handsontable.cellTypes.registerCellType('lisp', {
             let canvas = td.querySelector('canvas')
             if(!canvas) {
               canvas = document.createElement('canvas')
-              td.style.position = 'relative'
-              canvas.width = td.clientWidth
-              canvas.height = td.clientHeight
-              canvas.style.position = 'absolute'
-              canvas.style.top = '0'
-              canvas.style.left = '0'
+              canvas.width = td.clientWidth * devicePixelRatio
+              canvas.height = td.clientHeight * devicePixelRatio
               td.replaceChildren(canvas)
             }
             const osc = new Oscilloscope(ctx, result, canvas)
-            osc.draw()
-          } else if(result) {
+            osc.run()
+          } else if(result || result === false) {
             td.textContent = result as string
           } else {
-            td.textContent = '💭'
+            td.textContent = '🔃 Empty'
           }
         }
       )
@@ -180,7 +176,15 @@ const rxlib = {
     const gain = new GainNode(ctx)
     gain.connect(ctx.destination)
     return gain
-  }
+  },
+  'gate': (clock: Observable<unknown>, length: MaybeObsvervable<number>) => clock.pipe(
+    switchMap(() => concat(
+      of(true),
+      toObservable(length).pipe(
+        mergeMap(ms => of(false).pipe(delay(ms)))
+      )
+    ))
+  )
 }
 
 const rxspec = {
