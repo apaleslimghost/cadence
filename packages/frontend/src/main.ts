@@ -174,7 +174,6 @@ const rxlib = {
     osc.start()
     return toObservable(freq).pipe(
       map(f => (osc.frequency.setValueAtTime(f, ctx.currentTime), osc)),
-      finalize(() => osc.stop())
     )
   },
   'dest': () => {
