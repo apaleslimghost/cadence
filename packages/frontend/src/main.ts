@@ -4,7 +4,7 @@ import './index.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import { asyncScheduler, BehaviorSubject, combineLatest, concat, defer, delay, filter, finalize, from, interval, isObservable, map, mergeMap, Observable, observeOn, of, repeat, share, shareReplay, Subscriber, Subscription, switchMap, tap, zip, type OperatorFunction } from 'rxjs';
+import { asyncScheduler, BehaviorSubject, combineLatest, concat, defer, delay, filter, finalize, from, interval, isObservable, map, mergeMap, Observable, observeOn, of, repeat, scan, share, shareReplay, Subscriber, Subscription, switchMap, tap, withLatestFrom, zip, type OperatorFunction } from 'rxjs';
 import pick from 'lodash/pick'
 import mapValues from 'lodash/mapValues';
 
@@ -196,7 +196,7 @@ const rxlib = {
   interval(...args: Parameters<typeof interval>) {
     return interval(...args).pipe(shareReplay(1))
   },
-  clock: (bpm: number) => rxlib.interval(60 * 1000 / bpm),
+  clock: (bpm: number, ppqn: number = 24) => rxlib.interval(60 * 1000 / (bpm * ppqn)),
   '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
     map((args) => args.reduce((a, b) => a * b))
   ),
@@ -267,7 +267,12 @@ const rxlib = {
         map(g => (isConnectable(g) ? g.connect(node.gain) : node.gain.setValueAtTime(g, ctx.currentTime), node))
       )
     })
-  }
+  },
+  'euclid': (trigs: Observable<unknown>, length: MaybeObsvervable<number>, steps: MaybeObsvervable<number>) => trigs.pipe(
+    scan(i => i + 1, -1),
+    withLatestFrom(toObservable(steps), toObservable(length)),
+    filter(([i, steps, length]) => (i * steps) % length < steps),
+  )
 }
 
 const rxspec = {
