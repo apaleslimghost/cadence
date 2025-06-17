@@ -132,6 +132,7 @@ class ControlParam implements Connectable {
   }
 
   linearRampToValueAtTime(value: number, time: number) {
+    console.log(this.valueToScale(value), ctx.currentTime, time)
     return this.scale.gain.linearRampToValueAtTime(this.valueToScale(value), time)
   }
 
@@ -250,18 +251,20 @@ const rxlib = {
     return trig.pipe(
       switchMap(() => combineLatest([toObservable(a), toObservable(d)]).pipe(
         map(([a, d]) => {
-          env.exponentialRampToValueAtTime(1, ctx.currentTime + a)
-          env.exponentialRampToValueAtTime(0.001, ctx.currentTime + d)
+          env.linearRampToValueAtTime(1, ctx.currentTime + a)
+          env.linearRampToValueAtTime(0, ctx.currentTime + d)
         })
       )),
       map(() => env)
     )
   }),
   'vca': (gain: MaybeObsvervable<number | Connectable>) => {
-    const node = new GainNode(ctx)
-    return toObservable(gain).pipe(
-      map(g => (isConnectable(g) ? g.connect(node.gain) : node.gain.setValueAtTime(g, ctx.currentTime), node))
-    )
+    return defer(() => {
+      const node = new GainNode(ctx)
+      return toObservable(gain).pipe(
+        map(g => (isConnectable(g) ? g.connect(node.gain) : node.gain.setValueAtTime(g, ctx.currentTime), node))
+      )
+    })
   }
 }
 
