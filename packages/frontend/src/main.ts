@@ -113,8 +113,10 @@ class ControlParam implements Connectable {
     this.minValue = minValue
     this.maxValue = maxValue
     const value = new ConstantSourceNode(ctx, { offset: maxValue - minValue })
+    value.start()
     this.scale = new GainNode(ctx, { gain: this.valueToScale(defaultValue) })
     const offset = new ConstantSourceNode(ctx, { offset: minValue })
+    offset.start()
     this.sum = new GainNode(ctx)
 
     value.connect(this.scale).connect(this.sum)
