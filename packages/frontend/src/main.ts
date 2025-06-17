@@ -1,6 +1,6 @@
-import './index.css'
 import 'handsontable/styles/handsontable.min.css';
 import 'handsontable/styles/ht-theme-main.min.css';
+import './index.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
