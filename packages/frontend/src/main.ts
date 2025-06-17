@@ -134,7 +134,6 @@ class ControlParam implements Connectable {
   }
 
   linearRampToValueAtTime(value: number, time: number) {
-    console.log(this.valueToScale(value), ctx.currentTime, time)
     return this.scale.gain.linearRampToValueAtTime(this.valueToScale(value), time)
   }
 
@@ -189,24 +188,26 @@ type MaybeObsvervable<T> = Observable<T> | T
 const toObservable = <T>(v: MaybeObsvervable<T>) => isObservable(v) ? v : new BehaviorSubject(v)
 
 const rxlib = {
-  map,
+  map: (obs: Observable<unknown>, fn: (a: unknown) => unknown) => obs.pipe(map(fn)),
   of,
   //@ts-expect-error idc
   'pipe': (head: Observable<unknown>, ...tail: OperatorFunction<unknown, unknown>[]) => head.pipe(...tail),
   interval(...args: Parameters<typeof interval>) {
     return interval(...args).pipe(shareReplay(1))
   },
-  clock: (bpm: number, ppqn: number = 24) => rxlib.interval(60 * 1000 / (bpm * ppqn)),
+  clock: (bpm: number, ppqn: number = 4) => rxlib.interval(60 * 1000 / (bpm * ppqn)),
   '*': (...args: MaybeObsvervable<number>[]) => combineLatest(args.map(toObservable)).pipe(
     map((args) => args.reduce((a, b) => a * b))
   ),
   '//': (obs: Observable<unknown>, n: number) => obs.pipe(filter((_, i) => (i % n) === 0), share()),
-  seq: (...events: unknown[]) => from(events).pipe(
-    observeOn(asyncScheduler),
-    repeat()
-  ),
-  '*>': (a: Observable<unknown>, b: Observable<unknown>) => zip(a, b).pipe(
-    map(([_, b]) => b),
+  seq: (trigs: Observable<unknown>, ...events: unknown[]) => zip(
+    from(events).pipe(
+      observeOn(asyncScheduler),
+      repeat()
+    ),
+    trigs
+  ).pipe(
+    map(([ev]) => ev),
     share()
   ),
   '→': (dest: Observable<AudioNode>, ...sources: Observable<AudioNode>[]) => {
@@ -272,7 +273,14 @@ const rxlib = {
     scan(i => i + 1, -1),
     withLatestFrom(toObservable(steps), toObservable(length)),
     filter(([i, steps, length]) => (i * steps) % length < steps),
-  )
+    share()
+  ),
+  'note': (note: string) => {
+    const oct = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    const A4 = 440
+    const index = oct.indexOf(note) - 9
+    return A4 * Math.pow(2, index/12)
+  }
 }
 
 const rxspec = {
