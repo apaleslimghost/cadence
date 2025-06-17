@@ -222,12 +222,12 @@ const rxlib = {
     )
   },
   // TODO allow using Connectables for params
-  'osc': (type: OscillatorType, freq: MaybeObsvervable<number>) => {
+  'osc': (type: OscillatorType, freq: MaybeObsvervable<number | Connectable>) => {
     return defer(() => {
       const osc = new OscillatorNode(ctx, { type })
       osc.start()
       return toObservable(freq).pipe(
-        map(f => (osc.frequency.setValueAtTime(f, ctx.currentTime), osc)),
+        map(f => (isConnectable(f) ? f.connect(osc.frequency) : osc.frequency.setValueAtTime(f, ctx.currentTime), osc)),
         finalize(() => osc.stop())
       )
     })
@@ -257,10 +257,10 @@ const rxlib = {
       map(() => env)
     )
   }),
-  'vca': (gain: MaybeObsvervable<number>) => {
+  'vca': (gain: MaybeObsvervable<number | Connectable>) => {
     const node = new GainNode(ctx)
     return toObservable(gain).pipe(
-      map(g => (node.gain.setValueAtTime(g, ctx.currentTime), node))
+      map(g => (isConnectable(g) ? g.connect(node.gain) : node.gain.setValueAtTime(g, ctx.currentTime), node))
     )
   }
 }
