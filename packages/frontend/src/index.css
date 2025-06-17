@@ -1,4 +1,4 @@
-@import '@fontsource/iosevka';
+@import '@fontsource/iosevka-curly';
 
 body {
 	margin: 0;
@@ -9,7 +9,7 @@ html, body, #root {
 }
 
 .handsontable {
-  font-family: 'Iosevka', monospace;
+  font-family: 'Iosevka Curly', monospace;
 }
 
 .htCore td {

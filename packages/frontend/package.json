@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@cadence/compiler": "^1.0.0",
-    "@fontsource/iosevka": "^5.2.5",
+    "@fontsource/iosevka-curly": "^5.2.5",
     "handsontable": "^15.3.0",
     "lodash": "^4.17.21",
     "rxjs": "^7.8.2"
