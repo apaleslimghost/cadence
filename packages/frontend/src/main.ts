@@ -9,12 +9,16 @@ import mapValues from 'lodash/mapValues';
 
 import evaluate from '@cadence/compiler'
 import { get, partition, sortBy, takeWhile } from 'lodash';
+import { SignalMap } from 'signal-utils/map';
+import { effect } from 'signal-utils/subtle/microtask-effect';
 
 
 
 registerAllModules();
 
 const ctx = new AudioContext()
+
+const cells = new SignalMap<string, unknown>()
 
 const colLetter = (col: number): string =>
   col <= 0
@@ -129,31 +133,33 @@ Handsontable.cellTypes.registerCellType('lisp', {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
     if(value) {
-        // result => {
-        //   td.animate([
-        //     { background: '#80D8FF' },
-        //     { background: 'transparent' },
-        //   ], {
-        //     duration: 200,
-        //     easing: 'ease-out'
-        //   })
+      effect(() => {
+        const result = cells.get(cellKey)
 
-        //   if(isConnectable(result)) {
-        //     let canvas = td.querySelector('canvas')
-        //     if(!canvas) {
-        //       canvas = document.createElement('canvas')
-        //       canvas.width = td.clientWidth * devicePixelRatio
-        //       canvas.height = td.clientHeight * devicePixelRatio
-        //       td.replaceChildren(canvas)
-        //     }
-        //     const osc = new Oscilloscope(ctx, result, canvas)
-        //     osc.run()
-        //   } else if(result != null) {
-        //     td.textContent = result as string
-        //   } else {
-        //     td.textContent = '🔃 Empty'
-        //   }
-        // }
+        td.animate([
+          { background: '#80D8FF' },
+          { background: 'transparent' },
+        ], {
+          duration: 200,
+          easing: 'ease-out'
+        })
+
+        if(isConnectable(result)) {
+          let canvas = td.querySelector('canvas')
+          if(!canvas) {
+            canvas = document.createElement('canvas')
+            canvas.width = td.clientWidth * devicePixelRatio
+            canvas.height = td.clientHeight * devicePixelRatio
+            td.replaceChildren(canvas)
+          }
+          const osc = new Oscilloscope(ctx, result, canvas)
+          osc.run()
+        } else if(result != null) {
+          td.textContent = result as string
+        } else {
+          td.textContent = '🔃 Empty'
+        }
+      })
     } else {
       // cellSubscriptions[cellKey]?.unsubscribe()
       // delete cellSubscriptions[cellKey]
@@ -218,7 +224,7 @@ new Handsontable(root, {
         console.log(error)
       }
 
-      // replaceCell(cellKey, toObservable(result))
+      cells.set(cellKey, result)
     }
   },
   licenseKey: "non-commercial-and-evaluation"

@@ -14,7 +14,9 @@
     "@fontsource/iosevka-curly": "^5.2.5",
     "handsontable": "^15.3.0",
     "lodash": "^4.17.21",
-    "rxjs": "^7.8.2"
+    "signal-polyfill": "^0.2.2",
+    "signal-utils": "^0.21.1",
+    "tone": "^15.1.22"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
