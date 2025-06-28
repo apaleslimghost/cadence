@@ -62,6 +62,18 @@ interface Connectable {
 
 const isConnectable = (thing: unknown): thing is Connectable => (thing && typeof thing === 'object') ? ('connect' in thing && typeof thing.connect === 'function') : false
 
+interface Disconnectable {
+  disconnect(): void
+}
+
+const isDisconnectable = (thing: unknown): thing is Disconnectable => (thing && typeof thing === 'object') ? ('disconnect' in thing && typeof thing.disconnect === 'function') : false
+
+interface Stoppable {
+  stop(): void
+}
+
+const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
+
 class Oscilloscope extends Scope<Connectable> {
   private anl: AnalyserNode
   private data: Uint8Array
@@ -149,6 +161,10 @@ Handsontable.cellTypes.registerCellType('lisp', {
         }
       })
     } else {
+      const result = cells.get(cellKey)?.get()
+      if(isDisconnectable(result)) result.disconnect()
+      if(isStoppable(result)) result.stop()
+
       cellSubscriptions[cellKey]?.()
       delete cellSubscriptions[cellKey]
       td.textContent = ''
