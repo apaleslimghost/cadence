@@ -11,6 +11,7 @@ import evaluate from '@cadence/compiler'
 import { get, partition, sortBy, takeWhile } from 'lodash';
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
+import { Signal } from 'signal-polyfill';
 
 
 
@@ -18,7 +19,7 @@ registerAllModules();
 
 const ctx = new AudioContext()
 
-const cells = new SignalMap<string, unknown>()
+const cells = new SignalMap<string, Signal.Computed<unknown>>()
 
 const colLetter = (col: number): string =>
   col <= 0
@@ -134,7 +135,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
 
     if(value) {
       effect(() => {
-        const result = cells.get(cellKey)
+        const result = cells.get(cellKey)?.get()
 
         td.animate([
           { background: '#80D8FF' },
@@ -194,7 +195,13 @@ const rxlib = {
     gain.connect(ctx.destination)
     return gain
   },
+}
 
+const rxspec = {
+  subscribe: ([key]: [string]) => {
+    console.log(key)
+    return cells.get(key)?.get()
+  }
 }
 
 new Handsontable(root, {
@@ -213,18 +220,21 @@ new Handsontable(root, {
   autoColumnSize: false,
   afterChange: (changes) => {
     for(const [row, column, oldValue, newValue] of changes ?? []) {
-      if(oldValue === newValue) return
+      if(oldValue === newValue || !newValue) return
 
       const cellKey = colLetter(1 + (column as number)) + (row + 1).toString(10)
-      let result
 
-      try {
-        result = evaluate(newValue, rxlib)
-      } catch(error) {
-        console.log(error)
-      }
+      cells.set(cellKey, new Signal.Computed(() => {
+        let result
 
-      cells.set(cellKey, result)
+        try {
+          result = evaluate(newValue, rxlib, rxspec)
+        } catch(error) {
+          console.log(error)
+        }
+
+        return result
+      }))
     }
   },
   licenseKey: "non-commercial-and-evaluation"
