@@ -93,8 +93,9 @@ Handsontable.cellTypes.registerCellType('lisp', {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
     if(value) {
-      cellSubscriptions[cellKey] = effect(() => {
+      cellSubscriptions[cellKey] ??= effect(() => {
         const result = cells.get(cellKey)?.get()
+        console.log(cellKey, result)
 
         td.animate([
           { background: '#80D8FF' },
@@ -175,8 +176,6 @@ new Handsontable(root, {
   colHeaders: true,
   height: "100%",
   width: "100%",
-  autoWrapRow: true,
-  autoWrapCol: true,
   autoRowSize: false,
   autoColumnSize: false,
   wordWrap: false,
