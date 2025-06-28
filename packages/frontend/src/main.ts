@@ -4,11 +4,8 @@ import './index.css';
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
-import pick from 'lodash/pick'
-import mapValues from 'lodash/mapValues';
 
 import evaluate from '@cadence/compiler'
-import { get, partition, sortBy, takeWhile } from 'lodash';
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
@@ -87,45 +84,6 @@ class Oscilloscope extends Scope<Connectable> {
         else this.cctx.lineTo(x,y);
     }
     this.cctx.stroke();
-  }
-}
-
-class ControlParam implements Connectable {
-  private scale: GainNode
-  private sum: GainNode
-  public minValue: number
-  public maxValue: number
-
-  constructor(ctx: AudioContext, {minValue = 0, maxValue = 1, defaultValue = 0}: { minValue?: number, maxValue?: number, defaultValue?: number } = {}) {
-    this.minValue = minValue
-    this.maxValue = maxValue
-    const value = new ConstantSourceNode(ctx, { offset: maxValue - minValue })
-    value.start()
-    this.scale = new GainNode(ctx, { gain: this.valueToScale(defaultValue) })
-    const offset = new ConstantSourceNode(ctx, { offset: minValue })
-    offset.start()
-    this.sum = new GainNode(ctx)
-
-    value.connect(this.scale).connect(this.sum)
-    offset.connect(this.sum)
-  }
-
-  valueToScale(value: number) {
-    return (value - this.minValue) / (this.maxValue - this.minValue)
-  }
-
-  connect<Dest extends AudioParam | AudioNode>(dest: Dest) {
-    //@ts-expect-error typescript this is so stupid wyd
-    this.sum.connect(dest)
-    return dest
-  }
-
-  linearRampToValueAtTime(value: number, time: number) {
-    return this.scale.gain.linearRampToValueAtTime(this.valueToScale(value), time)
-  }
-
-  exponentialRampToValueAtTime(value: number, time: number) {
-    return this.scale.gain.exponentialRampToValueAtTime(this.valueToScale(value), time)
   }
 }
 
