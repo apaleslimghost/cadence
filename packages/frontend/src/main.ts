@@ -103,7 +103,9 @@ Handsontable.cellTypes.registerCellType('lisp', {
           easing: 'ease-out'
         })
 
-        if(isConnectable(result)) {
+        if(result instanceof Error) {
+          td.textContent = `⚠️ ${result.message}`
+        } else if(isConnectable(result)) {
           let canvas = td.querySelector('canvas')
           if(!canvas) {
             canvas = document.createElement('canvas')
@@ -176,23 +178,28 @@ new Handsontable(root, {
   autoWrapCol: true,
   autoRowSize: false,
   autoColumnSize: false,
+  wordWrap: false,
   afterChange: (changes) => {
     for(const [row, column, oldValue, newValue] of changes ?? []) {
-      if(oldValue === newValue || !newValue) return
+      if(oldValue === newValue) return
 
       const cellKey = colLetter(1 + (column as number)) + (row + 1).toString(10)
 
-      cells.set(cellKey, new Signal.Computed(() => {
-        let result
+      if(!newValue) {
+        cells.delete(cellKey)
+      } else {
+        cells.set(cellKey, new Signal.Computed(() => {
+          let result
 
-        try {
-          result = evaluate(newValue, rxlib, rxspec)
-        } catch(error) {
-          console.log(error)
-        }
+          try {
+            result = evaluate(newValue, rxlib, rxspec)
+          } catch(error) {
+            result = error
+          }
 
-        return result
-      }))
+          return result
+        }))
+      }
     }
   },
   licenseKey: "non-commercial-and-evaluation"
