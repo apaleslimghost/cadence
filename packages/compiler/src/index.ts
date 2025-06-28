@@ -67,7 +67,7 @@ const defaultSpecials: Specials = {
   },
 };
 
-const serialise = (expression: Atom): string =>
+export const serialise = (expression: Atom): string =>
   Array.isArray(expression)
     ? `(${expression.map(serialise).join(" ")})`
     : expression.valueOf();

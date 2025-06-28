@@ -5,16 +5,20 @@ import './index.css';
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
 
-import evaluate from '@cadence/compiler'
+import evaluate, { serialise } from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
-
+import * as Tone from 'tone'
 
 
 registerAllModules();
 
-const ctx = new AudioContext()
+interface WithCallback<Args extends unknown[]> {
+  callback: (...args: Args) => void
+}
+
+const hasCallback = <T extends unknown[]>(obj: unknown): obj is WithCallback<T> => (obj && typeof obj === 'object' && 'callback' in obj) ? true : false
 
 const cells = new SignalMap<string, Signal.Computed<unknown>>()
 const cellSubscriptions: Record<string, () => void> = {}
@@ -88,6 +92,16 @@ class Oscilloscope extends Scope<Connectable> {
   }
 }
 
+const pulse = (el: HTMLElement, color: string) => {
+  el.animate([
+    { background: color },
+    { background: 'transparent' },
+  ], {
+    duration: 200,
+    easing: 'ease-out'
+  })
+}
+
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
@@ -96,6 +110,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
       cellSubscriptions[cellKey] ??= effect(() => {
         try {
           const result = cells.get(cellKey)?.get()
+          pulse(td, '#80D8FF')
 
           td.animate([
             { background: '#80D8FF' },
@@ -106,15 +121,22 @@ Handsontable.cellTypes.registerCellType('lisp', {
           })
 
           if(isConnectable(result)) {
-            let canvas = td.querySelector('canvas')
-            if(!canvas) {
-              canvas = document.createElement('canvas')
-              canvas.width = td.clientWidth * devicePixelRatio
-              canvas.height = td.clientHeight * devicePixelRatio
-              td.replaceChildren(canvas)
+            // let canvas = td.querySelector('canvas')
+            // if(!canvas) {
+            //   canvas = document.createElement('canvas')
+            //   canvas.width = td.clientWidth * devicePixelRatio
+            //   canvas.height = td.clientHeight * devicePixelRatio
+            //   td.replaceChildren(canvas)
+            // }
+            // const osc = new Oscilloscope(ctx, result, canvas)
+            // osc.run()
+          } else if(hasCallback(result)) {
+            const cb = result.callback
+            result.callback = (...args) => {
+              cb(...args)
+              pulse(td, '#7C4DFF')
+              td.textContent = serialise(args)
             }
-            const osc = new Oscilloscope(ctx, result, canvas)
-            osc.run()
           } else if(result != null) {
             td.textContent = result as string
           } else {
@@ -122,6 +144,8 @@ Handsontable.cellTypes.registerCellType('lisp', {
           }
         } catch(error) {
           td.textContent = `⚠️ ${error}`
+          td.setAttribute('title', `⚠️ ${error}`)
+          console.error(error)
         }
       })
     } else {
@@ -142,21 +166,14 @@ const rxlib = {
     // finalize(() => sources_.forEach(s => s.disconnect(dest)))
   },
   // TODO allow using Connectables for params
-  'osc': (type: OscillatorType, freq: number | Connectable) => {
-    const osc = new OscillatorNode(ctx, { type })
-    osc.start()
-    if(isConnectable(freq)) {
-      freq.connect(osc.frequency)
-    } else {
-      osc.frequency.setValueAtTime(freq, ctx.currentTime)
-    }
-      // finalize(() => osc.stop())
-    return osc
+  'clock': (frequency: Tone.Unit.Hertz, units: 'bpm' | 'hertz' = 'bpm') => {
+    return new Tone.Clock({
+      frequency,
+      units
+    }).start()
   },
   'dest': () => {
-    const gain = new GainNode(ctx)
-    gain.connect(ctx.destination)
-    return gain
+    return Tone.getDestination()
   },
 }
 
@@ -196,5 +213,5 @@ new Handsontable(root, {
 })
 
 root.addEventListener('click', () => {
-  ctx.resume()
+  Tone.start()
 })
