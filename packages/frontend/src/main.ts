@@ -17,6 +17,7 @@ registerAllModules();
 const ctx = new AudioContext()
 
 const cells = new SignalMap<string, Signal.Computed<unknown>>()
+const cellSubscriptions: Record<string, () => void> = {}
 
 const colLetter = (col: number): string =>
   col <= 0
@@ -92,7 +93,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
     if(value) {
-      effect(() => {
+      cellSubscriptions[cellKey] = effect(() => {
         const result = cells.get(cellKey)?.get()
 
         td.animate([
@@ -122,9 +123,9 @@ Handsontable.cellTypes.registerCellType('lisp', {
         }
       })
     } else {
-      // cellSubscriptions[cellKey]?.unsubscribe()
-      // delete cellSubscriptions[cellKey]
-      // td.textContent = ''
+      cellSubscriptions[cellKey]?.()
+      delete cellSubscriptions[cellKey]
+      td.textContent = ''
     }
   },
 });
