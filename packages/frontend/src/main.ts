@@ -94,33 +94,34 @@ Handsontable.cellTypes.registerCellType('lisp', {
 
     if(value) {
       cellSubscriptions[cellKey] ??= effect(() => {
-        const result = cells.get(cellKey)?.get()
-        console.log(cellKey, result)
+        try {
+          const result = cells.get(cellKey)?.get()
 
-        td.animate([
-          { background: '#80D8FF' },
-          { background: 'transparent' },
-        ], {
-          duration: 200,
-          easing: 'ease-out'
-        })
+          td.animate([
+            { background: '#80D8FF' },
+            { background: 'transparent' },
+          ], {
+            duration: 200,
+            easing: 'ease-out'
+          })
 
-        if(result instanceof Error) {
-          td.textContent = `⚠️ ${result.message}`
-        } else if(isConnectable(result)) {
-          let canvas = td.querySelector('canvas')
-          if(!canvas) {
-            canvas = document.createElement('canvas')
-            canvas.width = td.clientWidth * devicePixelRatio
-            canvas.height = td.clientHeight * devicePixelRatio
-            td.replaceChildren(canvas)
+          if(isConnectable(result)) {
+            let canvas = td.querySelector('canvas')
+            if(!canvas) {
+              canvas = document.createElement('canvas')
+              canvas.width = td.clientWidth * devicePixelRatio
+              canvas.height = td.clientHeight * devicePixelRatio
+              td.replaceChildren(canvas)
+            }
+            const osc = new Oscilloscope(ctx, result, canvas)
+            osc.run()
+          } else if(result != null) {
+            td.textContent = result as string
+          } else {
+            td.textContent = '🔃 Empty'
           }
-          const osc = new Oscilloscope(ctx, result, canvas)
-          osc.run()
-        } else if(result != null) {
-          td.textContent = result as string
-        } else {
-          td.textContent = '🔃 Empty'
+        } catch(error) {
+          td.textContent = `⚠️ ${error}`
         }
       })
     } else {
@@ -160,10 +161,7 @@ const rxlib = {
 }
 
 const rxspec = {
-  subscribe: ([key]: [string]) => {
-    console.log(key)
-    return cells.get(key)?.get()
-  }
+  subscribe: ([key]: [string]) => cells.get(key)?.get()
 }
 
 new Handsontable(root, {
@@ -188,17 +186,9 @@ new Handsontable(root, {
       if(!newValue) {
         cells.delete(cellKey)
       } else {
-        cells.set(cellKey, new Signal.Computed(() => {
-          let result
-
-          try {
-            result = evaluate(newValue, rxlib, rxspec)
-          } catch(error) {
-            result = error
-          }
-
-          return result
-        }))
+        cells.set(cellKey, new Signal.Computed(() =>
+          evaluate(newValue, rxlib, rxspec)
+        ))
       }
     }
   },
