@@ -9,6 +9,7 @@ import evaluate, { serialise } from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
+import { finalize, fromEventPattern, isObservable, map, Subscription } from 'rxjs'
 import * as Tone from 'tone'
 
 
@@ -22,6 +23,7 @@ const hasCallback = <T extends unknown[]>(obj: unknown): obj is WithCallback<T> 
 
 const cells = new SignalMap<string, Signal.Computed<unknown>>()
 const cellSubscriptions: Record<string, () => void> = {}
+const cellObservableSubscriptions: Record<string, Subscription> = {}
 
 const colLetter = (col: number): string =>
   col <= 0
@@ -142,13 +144,11 @@ Handsontable.cellTypes.registerCellType('lisp', {
             // }
             // const osc = new Oscilloscope(ctx, result, canvas)
             // osc.run()
-          } else if(hasCallback(result)) {
-            const cb = result.callback
-            result.callback = (...args) => {
-              cb(...args)
+          } else if(isObservable(result)) {
+            cellObservableSubscriptions[cellKey] ??= result.subscribe((args) => {
               pulse(td, '#7C4DFF')
               td.textContent = serialise(args)
-            }
+            })
           } else if(result != null) {
             td.textContent = result as string
           } else {
@@ -166,11 +166,19 @@ Handsontable.cellTypes.registerCellType('lisp', {
       if(isStoppable(result)) result.stop()
 
       cellSubscriptions[cellKey]?.()
+      cellObservableSubscriptions[cellKey]?.unsubscribe()
       delete cellSubscriptions[cellKey]
+      delete cellObservableSubscriptions[cellKey]
       td.textContent = ''
     }
   },
 });
+
+const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEventPattern(
+  handler => tone.callback = handler,
+  () => tone.callback = () => {},
+  (...args) => args as T
+)
 
 const root = document.getElementById('root')!
 
@@ -182,11 +190,23 @@ const rxlib = {
     // finalize(() => sources_.forEach(s => s.disconnect(dest)))
   },
   // TODO allow using Connectables for params
-  'clock': (frequency: Tone.Unit.Hertz, units: 'bpm' | 'hertz' = 'bpm') => {
-    return new Tone.Clock({
-      frequency,
-      units
-    }).start()
+  'clock': (frequency: Tone.Unit.BPM) => {
+    Tone.getTransport().bpm.value = frequency
+    const loop = new Tone.Loop({ interval: '16n' }).start(0)
+    return fromToneCallback(loop).pipe(
+      map(([time]) => [Tone.Time(time).toBarsBeatsSixteenths()]),
+      finalize(() => {
+        loop.stop()
+      })
+    )
+  },
+  'loop': (interval: Tone.Unit.Interval) => {
+    const loop = new Tone.Loop({ interval }).start(Tone.Time(Tone.now()).quantize(interval))
+    return fromToneCallback(loop).pipe(
+      finalize(() => {
+        loop.stop()
+      })
+    )
   },
   'dest': () => {
     return Tone.getDestination()
@@ -230,4 +250,5 @@ new Handsontable(root, {
 
 root.addEventListener('click', () => {
   Tone.start()
+  Tone.getTransport().start()
 })
