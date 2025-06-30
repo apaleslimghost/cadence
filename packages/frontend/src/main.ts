@@ -5,7 +5,7 @@ import './index.css';
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
 
-import evaluate, { serialise } from '@cadence/compiler'
+import evaluate from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
@@ -131,6 +131,34 @@ const pulse = (el: HTMLElement, color: string) => {
 
 const getCellKey = (column: number, row: number) => colLetter(column) + row.toString(10)
 
+type Atom = unknown | SExpr
+type SExpr = Atom[]
+
+export const serialise = (expression: Atom): string => {
+  if(Array.isArray(expression)) {
+    return `(${expression.map(serialise).join(" ")})`
+  }
+
+  if(typeof expression === 'number') {
+    return expression === Math.round(expression) ? expression.toString(10) : expression.toFixed(3)
+  }
+
+  if(typeof expression === 'string') {
+    return expression
+  }
+
+  if(typeof expression === 'boolean') {
+    return expression.toString()
+  }
+
+  if(expression == null) {
+    return '🔃 empty'
+  }
+
+  return Object.getPrototypeOf(expression ?? Object.create(null))?.constructor?.name
+    ?? Object.prototype.toString.call(expression).replace(/\[object (.+)\]/, '$1')
+}
+
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
     const cellKey = getCellKey(column + 1, row + 1)
@@ -161,14 +189,13 @@ Handsontable.cellTypes.registerCellType('lisp', {
             // const osc = new Oscilloscope(ctx, result, canvas)
             // osc.run()
           } else if(isObservable(result)) {
+            td.textContent = '💤 pending'
             cellObservableSubscriptions[cellKey] ??= result.subscribe((args) => {
               pulse(td, '#7C4DFF')
               td.textContent = serialise(args)
             })
-          } else if(result != null) {
-            td.textContent = serialise(result)
           } else {
-            td.textContent = '🔃 Empty'
+            td.textContent = serialise(result)
           }
 
           td.setAttribute(
