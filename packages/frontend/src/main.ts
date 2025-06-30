@@ -198,6 +198,8 @@ const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEve
 
 const root = document.getElementById('root')!
 
+type SequenceEvents = (string | SequenceEvents)[]
+
 const rxlib = {
   '→': (dest: AudioNode, ...sources: AudioNode[]) => {
     sources.forEach(s => s?.connect(dest))
@@ -227,8 +229,24 @@ const rxlib = {
   'synth': () => {
     return new Tone.Synth()
   },
-  'trig-ar': curry((synth: Tone.Synth, note: Tone.Unit.Note, duration: Tone.Unit.Time) => {
-    synth.triggerAttackRelease(note, duration)
+  'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
+    const seq = new Tone.Sequence({
+      events,
+      subdivision
+    }).start('@1m')
+
+    return fromToneCallback(seq).pipe(
+      map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths(), Tone.Frequency(note).toNote().toLowerCase()]),
+      share(),
+      finalize(() => {
+        seq.stop()
+      })
+    )
+  },
+  'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: [Tone.Unit.Time, Tone.Unit.Note]) => {
+    console.log('trig-ar', time, note, duration)
+    synth.triggerAttackRelease(note, duration, time)
+    return [note, duration]
   }),
   'map': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   'dest': Tone.getDestination(),
