@@ -156,6 +156,12 @@ Handsontable.cellTypes.registerCellType('lisp', {
           } else {
             td.textContent = '🔃 Empty'
           }
+
+          td.setAttribute(
+            'title',
+            Object.getPrototypeOf(result ?? Object.create(null))?.constructor?.name
+            ?? Object.prototype.toString.call(result).replace(/\[object (.+)\]/, '$1')
+          )
         } catch(error) {
           td.textContent = `⚠️ ${error}`
           td.setAttribute('title', `⚠️ ${error}`)
@@ -191,7 +197,6 @@ const rxlib = {
 
     // finalize(() => sources_.forEach(s => s.disconnect(dest)))
   },
-  // TODO allow using Connectables for params
   'clock': (frequency: Tone.Unit.BPM) => {
     Tone.getTransport().bpm.value = frequency
     const loop = new Tone.Loop({ interval: '16n' }).start('0')
