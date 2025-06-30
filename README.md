@@ -22,10 +22,11 @@ todo
   - [x] spreadsheet ranges for arrays
 - [ ] bugs/UI improvements
   - [ ] stopping/restarting transport
-  - [ ] display pending observable value
+  - [x] display pending observable value
   - [ ] loop sync, quantisation etc
-  - [ ] split actual values in observable from displayed values in cell (hookable serialise)
+  - [x] split actual values in observable from displayed values in cell (hookable serialise)
   - [ ] flash cell on read(? is that even possible?)
+  - [ ] indistinguishable between deleting a cell that returns a reference to something and deleting the cell containing the thing
 - [ ] midi
   - [ ] CCs
   - [ ] notes

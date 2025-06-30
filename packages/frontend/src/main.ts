@@ -139,6 +139,16 @@ export const serialise = (expression: Atom): string => {
     return `(${expression.map(serialise).join(" ")})`
   }
 
+  if(typeof expression === 'object') {
+    if(expression instanceof Tone.FrequencyClass) {
+      return expression.toNote().toLowerCase()
+    }
+
+    if(expression instanceof Tone.TimeClass) {
+      return expression.toBarsBeatsSixteenths()
+    }
+  }
+
   if(typeof expression === 'number') {
     return expression === Math.round(expression) ? expression.toString(10) : expression.toFixed(3)
   }
@@ -252,7 +262,7 @@ const rxlib = new Proxy({
     Tone.getTransport().on('start', () => loop.start(start))
     Tone.getTransport().on('stop', () => loop.stop())
     return fromToneCallback(loop).pipe(
-      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
+      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n'))]),
       share(),
       finalize(() => {
         loop.stop()
@@ -271,7 +281,7 @@ const rxlib = new Proxy({
     Tone.getTransport().on('stop', () => seq.stop())
 
     return fromToneCallback(seq).pipe(
-      map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths(), Tone.Frequency(note).toNote().toLowerCase()]),
+      map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')), Tone.Frequency(note)]),
       share(),
       finalize(() => {
         seq.stop()
