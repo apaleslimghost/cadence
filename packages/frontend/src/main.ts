@@ -124,6 +124,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
     if(value) {
       cellSubscriptions[cellKey] ??= effect(() => {
         try {
+          td.removeAttribute('title')
           const result = cells.get(cellKey)?.get()
           pulse(td, '#80D8FF')
 
