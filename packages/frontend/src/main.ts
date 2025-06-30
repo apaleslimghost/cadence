@@ -9,8 +9,9 @@ import evaluate, { serialise } from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
-import { finalize, fromEventPattern, isObservable, map, Subscription } from 'rxjs'
+import { finalize, fromEventPattern, isObservable, map, Observable, Subscription } from 'rxjs'
 import * as Tone from 'tone'
+import { curry } from 'lodash';
 
 
 registerAllModules();
@@ -192,25 +193,31 @@ const rxlib = {
   // TODO allow using Connectables for params
   'clock': (frequency: Tone.Unit.BPM) => {
     Tone.getTransport().bpm.value = frequency
-    const loop = new Tone.Loop({ interval: '16n' }).start(0)
+    const loop = new Tone.Loop({ interval: '16n' }).start('0')
     return fromToneCallback(loop).pipe(
-      map(([time]) => [Tone.Time(time).toBarsBeatsSixteenths()]),
+      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
       finalize(() => {
         loop.stop()
       })
     )
   },
   'loop': (interval: Tone.Unit.Interval) => {
-    const loop = new Tone.Loop({ interval }).start(Tone.Time(Tone.now()).quantize(interval))
+    const loop = new Tone.Loop({ interval }).start(Tone.Time(Tone.now()).quantize('1m'))
     return fromToneCallback(loop).pipe(
+      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
       finalize(() => {
         loop.stop()
       })
     )
   },
-  'dest': () => {
-    return Tone.getDestination()
+  'synth': () => {
+    return new Tone.Synth()
   },
+  'trig-ar': curry((synth: Tone.Synth, note: Tone.Unit.Note, duration: Tone.Unit.Time) => {
+    synth.triggerAttackRelease(note, duration)
+  }),
+  'map': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
+  'dest': Tone.getDestination(),
 }
 
 const rxspec = {
