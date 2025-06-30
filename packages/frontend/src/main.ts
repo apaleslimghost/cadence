@@ -206,7 +206,7 @@ const root = document.getElementById('root')!
 
 type SequenceEvents = (string | SequenceEvents)[]
 
-const rxlib = {
+const rxlib = new Proxy({
   '→': (dest: AudioNode, ...sources: AudioNode[]) => {
     sources.forEach(s => s?.connect(dest))
     return dest
@@ -255,7 +255,7 @@ const rxlib = {
     synth.triggerAttackRelease(note, duration, time)
     return [note, duration]
   }),
-  'map': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
+  '@>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   'dest': Tone.getDestination(),
   ':': (from: string, to: string) => {
     const [fromMatch, _fromCol, _fromRow] = /([A-Z]+)(\d+)/.exec(from) ?? []
@@ -283,11 +283,15 @@ const rxlib = {
 
     return out
   }
-}
+}, {
+  get(target, property, receiver) {
+    if(typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
+      return cells.get(property)?.get()
+    }
 
-const rxspec = {
-  subscribe: ([key]: [string]) => cells.get(key)?.get()
-}
+    return Reflect.get(target, property, receiver)
+  }
+})
 
 new Handsontable(root, {
   className: "ht-theme-main-dark",
@@ -312,7 +316,7 @@ new Handsontable(root, {
         cells.delete(cellKey)
       } else {
         cells.set(cellKey, new Signal.Computed(() =>
-          evaluate(newValue, rxlib, rxspec)
+          evaluate(newValue, rxlib)
         ))
       }
     }

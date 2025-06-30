@@ -95,22 +95,8 @@ const evaluate = (expression: Atom, scope: Scope, specials: Specials): unknown =
 
 const cells = [];
 
-const defaultScope: Scope = {
-  p: (...args: unknown[]) => (console.log(...args), args),
-  nil: false,
-  t: true,
-  "*": (...args: number[]) => args.reduce((a, b) => a * b),
-  "+": (...args: number[]) => args.reduce((a, b) => a + b),
-  "-": (a: number, b: number) => a - b,
-  "/":  (a: number, b: number) => a / b,
-  ">":  (a: any, b: any) => a > b,
-  "<":  (a: any, b: any) => a < b,
-  ">=":  (a: any, b: any) => a >= b,
-  "<=":  (a: any, b: any) => a <= b,
-};
-
-export default (input: string, externals: Scope = {}, externalSpecials: Specials = {}) => {
+export default (input: string, scope: Scope = {}, externalSpecials: Specials = {}) => {
   const tree = parse(input)
   if(tree instanceof Error) throw tree
-  return evaluate(tree, {...defaultScope, ...externals}, {...defaultSpecials, ...externalSpecials})
+  return evaluate(tree, scope, {...defaultSpecials, ...externalSpecials})
 }
