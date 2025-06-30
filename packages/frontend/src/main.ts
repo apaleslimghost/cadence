@@ -199,16 +199,10 @@ const rxlib = {
   },
   'clock': (frequency: Tone.Unit.BPM) => {
     Tone.getTransport().bpm.value = frequency
-    const loop = new Tone.Loop({ interval: '16n' }).start('0')
-    return fromToneCallback(loop).pipe(
-      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
-      finalize(() => {
-        loop.stop()
-      })
-    )
+    return rxlib.loop('16n', '0')
   },
-  'loop': (interval: Tone.Unit.Interval) => {
-    const loop = new Tone.Loop({ interval }).start(Tone.Time(Tone.now()).quantize('1m'))
+  'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = Tone.Time(Tone.now()).quantize('1m')) => {
+    const loop = new Tone.Loop({ interval }).start(start)
     return fromToneCallback(loop).pipe(
       map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
       finalize(() => {
