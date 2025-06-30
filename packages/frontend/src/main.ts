@@ -240,6 +240,8 @@ const rxlib = {
       events,
       subdivision
     }).start('@1m')
+    Tone.getTransport().on('start', () => seq.start('@1m'))
+    Tone.getTransport().on('stop', () => seq.stop())
 
     return fromToneCallback(seq).pipe(
       map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths(), Tone.Frequency(note).toNote().toLowerCase()]),
