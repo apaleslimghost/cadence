@@ -26,6 +26,13 @@ const cells = new SignalMap<string, Signal.Computed<unknown>>()
 const cellSubscriptions: Record<string, () => void> = {}
 const cellObservableSubscriptions: Record<string, Subscription> = {}
 
+// @ts-ignore
+window.cells = cells
+// @ts-ignore
+window.cellSubscriptions = cellSubscriptions
+// @ts-ignore
+window.cellObservableSubscriptions = cellObservableSubscriptions
+
 const colLetter = (col: number): string =>
   col <= 0
     ? ''
@@ -122,6 +129,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
     const cellKey = colLetter(column + 1) + (row + 1).toString(10)
 
     if(value) {
+      console.log(cellKey, cellSubscriptions[cellKey])
       cellSubscriptions[cellKey] ??= effect(() => {
         try {
           td.removeAttribute('title')
@@ -152,7 +160,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
               td.textContent = serialise(args)
             })
           } else if(result != null) {
-            td.textContent = result as string
+            td.textContent = serialise(result)
           } else {
             td.textContent = '🔃 Empty'
           }
@@ -201,7 +209,11 @@ const rxlib = {
     Tone.getTransport().bpm.value = frequency
     return rxlib.loop('16n', '0')
   },
-  'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = Tone.Time(Tone.now()).quantize('1m')) => {
+  'sig': (signature: [number, number]) => {
+    Tone.getTransport().timeSignature = signature
+    return signature
+  },
+  'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = '@1m') => {
     const loop = new Tone.Loop({ interval }).start(start)
     return fromToneCallback(loop).pipe(
       map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
@@ -257,5 +269,5 @@ new Handsontable(root, {
 
 root.addEventListener('click', () => {
   Tone.start()
-  Tone.getTransport().start()
+  Tone.getTransport().start('0')
 })
