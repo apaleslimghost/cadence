@@ -9,7 +9,7 @@ import evaluate, { serialise } from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
-import { finalize, fromEventPattern, isObservable, map, Observable, Subscription } from 'rxjs'
+import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription } from 'rxjs'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
 
@@ -79,7 +79,7 @@ interface Disconnectable {
 const isDisconnectable = (thing: unknown): thing is Disconnectable => (thing && typeof thing === 'object') ? ('disconnect' in thing && typeof thing.disconnect === 'function') : false
 
 interface Stoppable {
-  stop(): void
+  stop(...args: unknown[]): void
 }
 
 const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
@@ -179,7 +179,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
     } else {
       const result = cells.get(cellKey)?.get()
       if(isDisconnectable(result)) result.disconnect()
-      if(isStoppable(result)) result.stop()
+      if(isStoppable(result)) result.stop(0)
 
       cellSubscriptions[cellKey]?.()
       cellObservableSubscriptions[cellKey]?.unsubscribe()
@@ -205,18 +205,20 @@ const rxlib = {
 
     // finalize(() => sources_.forEach(s => s.disconnect(dest)))
   },
-  'clock': (frequency: Tone.Unit.BPM) => {
-    Tone.getTransport().bpm.value = frequency
-    return rxlib.loop('16n', '0')
-  },
-  'sig': (signature: [number, number]) => {
-    Tone.getTransport().timeSignature = signature
-    return signature
+  'trans': (frequency: Tone.Unit.BPM, signature: [number, number]) => {
+    const trans = Tone.getTransport()
+    trans.start('0')
+    trans.bpm.value = frequency
+    trans.timeSignature = signature
+    return trans
   },
   'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = '@1m') => {
     const loop = new Tone.Loop({ interval }).start(start)
+    Tone.getTransport().on('start', () => loop.start(start))
+    Tone.getTransport().on('stop', () => loop.stop())
     return fromToneCallback(loop).pipe(
       map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n')).toBarsBeatsSixteenths()]),
+      share(),
       finalize(() => {
         loop.stop()
       })
@@ -269,5 +271,4 @@ new Handsontable(root, {
 
 root.addEventListener('click', () => {
   Tone.start()
-  Tone.getTransport().start('0')
 })
