@@ -39,6 +39,11 @@ const colLetter = (col: number): string =>
     : colLetter(Math.floor((col - 1) / 26)) +
       String.fromCharCode(((col - 1) % 26) + 65);
 
+const colFromLetter = (col: string): number =>[...col].reduce(
+  (acc, c) => acc * 26 + (c.charCodeAt(0) - 64),
+  0
+)
+
 abstract class Scope<Source> {
   protected ctx: AudioContext
   protected src: Source
@@ -124,9 +129,11 @@ const pulse = (el: HTMLElement, color: string) => {
   })
 }
 
+const getCellKey = (column: number, row: number) => colLetter(column) + row.toString(10)
+
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
-    const cellKey = colLetter(column + 1) + (row + 1).toString(10)
+    const cellKey = getCellKey(column + 1, row + 1)
 
     if(value) {
       console.log(cellKey, cellSubscriptions[cellKey])
@@ -250,6 +257,37 @@ const rxlib = {
   }),
   'map': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   'dest': Tone.getDestination(),
+  ':': (from: string, to: string) => {
+    const [fromMatch, _fromCol, _fromRow] = /([A-Z]+)(\d+)/.exec(from) ?? []
+    const [toMatch, _toCol, _toRow] = /([A-Z]+)(\d+)/.exec(to) ?? []
+    if(!fromMatch || !toMatch) throw new Error(`invalid range ${serialise([':', from, to])}`)
+
+    const fromCol = colFromLetter(_fromCol)
+    const fromRow = parseInt(_fromRow, 10)
+    const toCol = colFromLetter(_toCol)
+    const toRow = parseInt(_toRow, 10)
+
+    if(Number.isNaN(fromCol) || Number.isNaN(fromRow) || Number.isNaN(toCol) || Number.isNaN(toRow)) {
+      throw new Error(`invalid range ${serialise([':', from, to])}`)
+    }
+
+    console.log({fromCol,fromRow,toCol,toRow})
+
+    const out: unknown[] = []
+    for(let i = fromCol; i <= toCol; i++) {
+      for(let j = fromRow; j <= toRow; j++) {
+        const cellKey = getCellKey(i, j)
+        console.log(cellKey)
+        out.push(
+          cells.get(cellKey)?.get()
+        )
+      }
+    }
+
+    console.log(out)
+
+    return out
+  }
 }
 
 const rxspec = {
@@ -273,7 +311,7 @@ new Handsontable(root, {
     for(const [row, column, oldValue, newValue] of changes ?? []) {
       if(oldValue === newValue) return
 
-      const cellKey = colLetter(1 + (column as number)) + (row + 1).toString(10)
+      const cellKey = getCellKey(column as number + 1, row + 1)
 
       if(!newValue) {
         cells.delete(cellKey)
