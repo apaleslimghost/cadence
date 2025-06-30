@@ -18,8 +18,8 @@ todo
   - [ ] oscs and filters
   - [ ] effects
   - [ ] LFOs/envelopes, connecting nodes to params not via observables 🤔
-  - [ ] easier .connect
-  - [ ] spreadsheet ranges for arrays
+  - [ ] easier .connect/.chain
+  - [x] spreadsheet ranges for arrays
 - [ ] bugs/UI improvements
   - [ ] stopping/restarting transport
   - [ ] display pending observable value

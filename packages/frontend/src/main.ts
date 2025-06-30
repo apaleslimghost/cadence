@@ -136,7 +136,6 @@ Handsontable.cellTypes.registerCellType('lisp', {
     const cellKey = getCellKey(column + 1, row + 1)
 
     if(value) {
-      console.log(cellKey, cellSubscriptions[cellKey])
       cellSubscriptions[cellKey] ??= effect(() => {
         try {
           td.removeAttribute('title')
@@ -251,7 +250,6 @@ const rxlib = {
     )
   },
   'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: [Tone.Unit.Time, Tone.Unit.Note]) => {
-    console.log('trig-ar', time, note, duration)
     synth.triggerAttackRelease(note, duration, time)
     return [note, duration]
   }),
@@ -271,20 +269,15 @@ const rxlib = {
       throw new Error(`invalid range ${serialise([':', from, to])}`)
     }
 
-    console.log({fromCol,fromRow,toCol,toRow})
-
     const out: unknown[] = []
     for(let i = fromCol; i <= toCol; i++) {
       for(let j = fromRow; j <= toRow; j++) {
         const cellKey = getCellKey(i, j)
-        console.log(cellKey)
         out.push(
           cells.get(cellKey)?.get()
         )
       }
     }
-
-    console.log(out)
 
     return out
   }
