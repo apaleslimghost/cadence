@@ -24,7 +24,7 @@ todo
   - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
 - [ ] bugs/UI improvements
-  - [ ] stopping/restarting transport
+  - [x] stopping/restarting transport
   - [x] display pending observable value
   - [ ] loop sync, quantisation etc
   - [x] split actual values in observable from displayed values in cell (hookable serialise)
