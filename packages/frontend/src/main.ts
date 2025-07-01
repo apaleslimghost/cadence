@@ -9,10 +9,11 @@ import evaluate from '@cadence/compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
-import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription } from 'rxjs'
+import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription, switchMap } from 'rxjs'
 import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
+import type { ValueHolder } from 'handsontable/plugins/persistentState';
 
 
 registerAllModules();
@@ -297,7 +298,9 @@ const rxlib = new Proxy({
     synth.triggerAttackRelease(note, duration, time)
     return [note, duration]
   }),
-  '@>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
+  '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
+  '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
+  'i': <T>(i: T) => i,
   'dest': Tone.getDestination(),
   ':': (from: string, to: string) => {
     const [fromMatch, _fromCol, _fromRow] = /([A-Z]+)(\d+)/.exec(from) ?? []
@@ -335,8 +338,23 @@ const rxlib = new Proxy({
   }
 })
 
-new Handsontable(root, {
+const defaultData = Array.from({ length: 20 }, () => Array.from({ length: 100 }, () => null))
+
+function runCell(column: number, row: number, value: string | null) {
+  const cellKey = getCellKey(column as number + 1, row + 1)
+
+  if(!value) {
+    cells.delete(cellKey)
+  } else {
+    cells.set(cellKey, new Signal.Computed(() =>
+      evaluate(value, rxlib)
+    ))
+  }
+}
+
+const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
+  data: defaultData,
   cells: () => ({ type: 'lisp' }),
   minCols: 100,
   minRows: 100,
@@ -348,19 +366,27 @@ new Handsontable(root, {
   autoRowSize: false,
   autoColumnSize: false,
   wordWrap: false,
-  afterChange: (changes) => {
+  persistentState: true,
+  afterInit(this: Handsontable) {
+    const loaded = { value: undefined }
+    this.getPlugin('persistentState').loadValue('tableData', loaded)
+    const data = loaded.value ?? defaultData
+    this.updateData(data)
+    for(const [rowNum, col] of data.entries()) {
+      for(const [colNum, cell] of col.entries()) {
+        runCell(colNum, rowNum, cell)
+      }
+    }
+  },
+  afterChange(this: Handsontable, changes, source) {
+    if (source !== 'loadData' && source !== 'updateData') {
+      this.getPlugin('persistentState').saveValue('tableData', this.getData())
+    }
+
     for(const [row, column, oldValue, newValue] of changes ?? []) {
       if(oldValue === newValue) return
 
-      const cellKey = getCellKey(column as number + 1, row + 1)
-
-      if(!newValue) {
-        cells.delete(cellKey)
-      } else {
-        cells.set(cellKey, new Signal.Computed(() =>
-          evaluate(newValue, rxlib)
-        ))
-      }
+      runCell(column as number, row, newValue)
     }
   },
   licenseKey: "non-commercial-and-evaluation"

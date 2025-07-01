@@ -10,6 +10,7 @@ html, body, #root {
 
 .handsontable {
   font-family: 'Iosevka Curly', monospace;
+  font-variant-ligatures: discretionary-ligatures;
 }
 
 .htCore td {
