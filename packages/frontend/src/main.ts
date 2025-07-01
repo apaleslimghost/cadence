@@ -137,8 +137,6 @@ type Atom = unknown | SExpr
 type SExpr = Atom[]
 
 export const serialise = (expression: Atom): string => {
-  console.log(expression)
-
   if(Array.isArray(expression)) {
     return `(${expression.map(serialise).join(" ")})`
   }
