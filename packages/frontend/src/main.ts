@@ -264,24 +264,6 @@ const rxlib = new Proxy({
     trans.once('stop', () => trans.position = '0')
     return trans
   },
-  'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = '@1m') => {
-    const loop = new Tone.Loop({ interval }).start(start)
-
-    const onStart = () => loop.start(start)
-    const onStop = () => loop.stop()
-    Tone.getTransport().on('start', onStart)
-    Tone.getTransport().on('stop', onStop)
-
-    return fromToneCallback(loop).pipe(
-      map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n'))]),
-      share(),
-      finalize(() => {
-        Tone.getTransport().off('start', onStart)
-        Tone.getTransport().off('stop', onStop)
-        loop.stop()
-      })
-    )
-  },
   'synth': () => {
     return new Tone.Synth()
   },
