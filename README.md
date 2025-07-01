@@ -11,6 +11,9 @@ todo
   - [x] observable update flashing
   - [ ] controls
   - [ ] audionode oscilloscopes
+  - [x] data persistence
+  - [ ] automerge?
+  - [ ] collab?
 - [ ] more tonejs wrappers/primitives
   - [ ] samples/banks
   - [ ] jux rev (thanks yaxu)
@@ -27,6 +30,7 @@ todo
   - [x] split actual values in observable from displayed values in cell (hookable serialise)
   - [ ] flash cell on read(? is that even possible?)
   - [ ] indistinguishable between deleting a cell that returns a reference to something and deleting the cell containing the thing
+  - [ ] starting loops that were initialised before the transport started (should work? doesn't consistently eg on load with persistent data)
 - [ ] midi
   - [ ] CCs
   - [ ] notes
