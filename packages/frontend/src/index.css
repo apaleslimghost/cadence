@@ -2,6 +2,7 @@
 
 body {
 	margin: 0;
+  background: black;
 }
 
 html, body, #root {
@@ -11,6 +12,18 @@ html, body, #root {
 .handsontable {
   font-family: 'Iosevka Curly', monospace;
   font-variant-ligatures: discretionary-ligatures;
+}
+
+.handsontable .htCore {
+  cursor: cell;
+}
+
+.pending .handsontable .htCore {
+  cursor: progress;
+}
+
+#root.pending {
+  opacity: 0.7;
 }
 
 .htCore td {

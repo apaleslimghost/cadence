@@ -407,6 +407,7 @@ const hot = new Handsontable(root, {
   licenseKey: "non-commercial-and-evaluation"
 })
 
-root.addEventListener('click', () => {
-  Tone.start()
+root.addEventListener('click', async () => {
+  await Tone.start()
+  root.classList.remove('pending')
 })
