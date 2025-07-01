@@ -268,10 +268,12 @@ const rxlib = new Proxy({
     return new Tone.Synth()
   },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
-    const seqDuration = Tone.Time(subdivision).toSeconds() * events.length
+    const seqDuration = Tone.Time(subdivision).toTicks() * events.length
     const quantStart = '@' + subdivision
-    const startOffset = Math.floor(Tone.getTransport().seconds / seqDuration) % events.length
-    console.log(startOffset)
+    const transportProgress = Tone.getTransport().toTicks() / seqDuration
+    const repeat = Math.floor(transportProgress)
+    const loopProgress = transportProgress - repeat
+    const startOffset = Math.floor(loopProgress * events.length)
 
     const seq = new Tone.Sequence({
       events,
