@@ -343,7 +343,6 @@ const rxlib = new Proxy({
   }
 })
 
-const defaultData = Array.from({ length: 20 }, () => Array.from({ length: 100 }, () => null))
 
 function runCell(column: number, row: number, value: string | null) {
   const cellKey = getCellKey(column as number + 1, row + 1)
@@ -359,9 +358,9 @@ function runCell(column: number, row: number, value: string | null) {
 
 const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
-  data: defaultData,
+  data: [[]],
   cells: () => ({ type: 'lisp' }),
-  minCols: 100,
+  minCols: 20,
   minRows: 100,
   colWidths: 200,
   rowHeaders: true,
@@ -375,7 +374,7 @@ const hot = new Handsontable(root, {
   afterInit(this: Handsontable) {
     const loaded = { value: undefined }
     this.getPlugin('persistentState').loadValue('tableData', loaded)
-    const data = loaded.value ?? defaultData
+    const data = loaded.value ?? [[]]
     this.updateData(data)
     for(const [rowNum, col] of data.entries()) {
       for(const [colNum, cell] of col.entries()) {
