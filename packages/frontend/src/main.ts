@@ -265,16 +265,23 @@ const rxlib = new Proxy({
     trans.start('0')
     trans.bpm.value = frequency
     trans.timeSignature = signature
+    trans.once('stop', () => trans.position = '0')
     return trans
   },
   'loop': (interval: Tone.Unit.Time, start: Tone.Unit.Time = '@1m') => {
     const loop = new Tone.Loop({ interval }).start(start)
-    Tone.getTransport().on('start', () => loop.start(start))
-    Tone.getTransport().on('stop', () => loop.stop())
+
+    const onStart = () => loop.start(start)
+    const onStop = () => loop.stop()
+    Tone.getTransport().on('start', onStart)
+    Tone.getTransport().on('stop', onStop)
+
     return fromToneCallback(loop).pipe(
       map(([time]) => [Tone.Time(Tone.Time(time).quantize('16n'))]),
       share(),
       finalize(() => {
+        Tone.getTransport().off('start', onStart)
+        Tone.getTransport().off('stop', onStop)
         loop.stop()
       })
     )
@@ -287,13 +294,18 @@ const rxlib = new Proxy({
       events,
       subdivision
     }).start('@1m')
-    Tone.getTransport().on('start', () => seq.start('@1m'))
-    Tone.getTransport().on('stop', () => seq.stop())
+
+    const onStart = () => seq.start('@1m')
+    const onStop = () => seq.stop();
+    Tone.getTransport().on('start', onStart)
+    Tone.getTransport().on('stop', onStop)
 
     return fromToneCallback(seq).pipe(
       map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')), Tone.Frequency(note)]),
       share(),
       finalize(() => {
+        Tone.getTransport().off('start', onStart)
+        Tone.getTransport().off('stop', onStop)
         seq.stop()
       })
     )
