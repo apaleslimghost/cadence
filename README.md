@@ -26,7 +26,7 @@ todo
 - [ ] bugs/UI improvements
   - [x] stopping/restarting transport
   - [x] display pending observable value
-  - [ ] loop sync, quantisation etc
+  - [x] loop sync, quantisation etc
   - [x] split actual values in observable from displayed values in cell (hookable serialise)
   - [ ] flash cell on read(? is that even possible?)
   - [ ] indistinguishable between deleting a cell that returns a reference to something and deleting the cell containing the thing

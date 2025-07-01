@@ -268,18 +268,26 @@ const rxlib = new Proxy({
     return new Tone.Synth()
   },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
+    const seqDuration = Tone.Time(subdivision).toSeconds() * events.length
+    const quantStart = '@' + subdivision
+    const startOffset = Math.floor(Tone.getTransport().seconds / seqDuration) % events.length
+    console.log(startOffset)
+
     const seq = new Tone.Sequence({
       events,
       subdivision
-    }).start('@1m')
+    }).start(quantStart, startOffset)
 
-    const onStart = () => seq.start('@1m')
+    const onStart = () => seq.start(quantStart, startOffset)
     const onStop = () => seq.stop();
     Tone.getTransport().on('start', onStart)
     Tone.getTransport().on('stop', onStop)
 
     return fromToneCallback(seq).pipe(
-      map(([time, note]) => [Tone.Time(Tone.Time(time).quantize('16n')), Tone.Frequency(note)]),
+      map(([time, note]) => [
+        Tone.Time(time),
+        Tone.Frequency(note)
+      ]),
       share(),
       finalize(() => {
         Tone.getTransport().off('start', onStart)
