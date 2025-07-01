@@ -137,6 +137,8 @@ type Atom = unknown | SExpr
 type SExpr = Atom[]
 
 export const serialise = (expression: Atom): string => {
+  console.log(expression)
+
   if(Array.isArray(expression)) {
     return `(${expression.map(serialise).join(" ")})`
   }
@@ -148,6 +150,10 @@ export const serialise = (expression: Atom): string => {
 
     if(expression instanceof Tone.TimeClass) {
       return expression.toBarsBeatsSixteenths()
+    }
+
+    if(expression instanceof ToneClass) {
+      return '🎶 ' + expression.toString()
     }
   }
 
@@ -165,10 +171,6 @@ export const serialise = (expression: Atom): string => {
 
   if(expression == null) {
     return '🔃 empty'
-  }
-
-  if(expression instanceof ToneClass) {
-    return '🎶 ' + expression.toString()
   }
 
   return Object.getPrototypeOf(expression ?? Object.create(null))?.constructor?.name
@@ -226,15 +228,18 @@ Handsontable.cellTypes.registerCellType('lisp', {
         }
       })
     } else {
-      const result = cells.get(cellKey)?.get()
-      if(isDisconnectable(result)) result.disconnect()
-      if(isStoppable(result)) result.stop(0)
+      try {
+        const result = cells.get(cellKey)?.get()
+        if(isDisconnectable(result)) result.disconnect()
+        if(isStoppable(result)) result.stop(0)
+      } catch {}
 
       cellSubscriptions[cellKey]?.()
       cellObservableSubscriptions[cellKey]?.unsubscribe()
       delete cellSubscriptions[cellKey]
       delete cellObservableSubscriptions[cellKey]
       td.textContent = ''
+      td.removeAttribute('title')
     }
   },
 });
