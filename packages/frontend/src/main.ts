@@ -254,12 +254,8 @@ const root = document.getElementById('root')!
 type SequenceEvents = (string | SequenceEvents)[]
 
 const rxlib = new Proxy({
-  '→': (dest: AudioNode, ...sources: AudioNode[]) => {
-    sources.forEach(s => s?.connect(dest))
-    return dest
-
-    // finalize(() => sources_.forEach(s => s.disconnect(dest)))
-  },
+  '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) =>  source.chain(...dests),
+  '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) =>  source.fan(...dests),
   'trans': (frequency: Tone.Unit.BPM, signature: [number, number] | number = 4) => {
     const trans = Tone.getTransport()
     trans.start('0')

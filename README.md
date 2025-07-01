@@ -21,7 +21,7 @@ todo
   - [ ] oscs and filters
   - [ ] effects
   - [ ] LFOs/envelopes, connecting nodes to params not via observables 🤔
-  - [ ] easier .connect/.chain
+  - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
 - [ ] bugs/UI improvements
   - [ ] stopping/restarting transport
