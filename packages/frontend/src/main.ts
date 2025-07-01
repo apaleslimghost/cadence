@@ -206,7 +206,8 @@ Handsontable.cellTypes.registerCellType('lisp', {
             // osc.run()
           } else if(isObservable(result)) {
             td.textContent = '💤 pending'
-            cellObservableSubscriptions[cellKey] ??= result.subscribe((args) => {
+            cellObservableSubscriptions[cellKey]?.unsubscribe()
+            cellObservableSubscriptions[cellKey] = result.subscribe((args) => {
               pulse(td, '#E040FB33')
               td.textContent = serialise(args)
             })
