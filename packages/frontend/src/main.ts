@@ -10,6 +10,7 @@ import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
 import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription } from 'rxjs'
+import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
 
@@ -165,6 +166,10 @@ export const serialise = (expression: Atom): string => {
     return '🔃 empty'
   }
 
+  if(expression instanceof ToneClass) {
+    return '🎶 ' + expression.toString()
+  }
+
   return Object.getPrototypeOf(expression ?? Object.create(null))?.constructor?.name
     ?? Object.prototype.toString.call(expression).replace(/\[object (.+)\]/, '$1')
 }
@@ -201,7 +206,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
           } else if(isObservable(result)) {
             td.textContent = '💤 pending'
             cellObservableSubscriptions[cellKey] ??= result.subscribe((args) => {
-              pulse(td, '#7C4DFF')
+              pulse(td, '#E040FB33')
               td.textContent = serialise(args)
             })
           } else {
@@ -250,7 +255,7 @@ const rxlib = new Proxy({
 
     // finalize(() => sources_.forEach(s => s.disconnect(dest)))
   },
-  'trans': (frequency: Tone.Unit.BPM, signature: [number, number]) => {
+  'trans': (frequency: Tone.Unit.BPM, signature: [number, number] | number = 4) => {
     const trans = Tone.getTransport()
     trans.start('0')
     trans.bpm.value = frequency
