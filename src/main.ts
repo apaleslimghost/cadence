@@ -74,7 +74,7 @@ class Oscilloscope {
 
   constructor(ctx: AnyAudioContext, src: Connectable, canvas: HTMLCanvasElement) {
     this.ctx = ctx
-    this.src = src
+    this.src = src instanceof Tone.LFO ? src['_oscillator'] : src
     this.canvas = canvas
 
     this.cctx = this.canvas.getContext("2d")!;
@@ -82,7 +82,7 @@ class Oscilloscope {
     this.cctx.lineWidth = devicePixelRatio;
 
     this.anl = this.ctx.createAnalyser();
-    this.anl.fftSize = Oscilloscope.FFT;
+    this.anl.fftSize = src instanceof Tone.LFO ? 32768 : Oscilloscope.FFT;
     this.src.connect(this.anl);
     this.data = new Uint8Array(Oscilloscope.FFT);
   }
@@ -104,7 +104,7 @@ class Oscilloscope {
     for(let i=0; i < this.data.length; i++){
         const x = i * (this.canvas.width * 2 / this.data.length);
         const v = this.data[i] / 128.0;
-        const y = v * this.canvas.height / 2;
+        const y = this.canvas.height - v * this.canvas.height / 2;
         if(i === 0) this.cctx.moveTo(x,y);
         else this.cctx.lineTo(x,y);
     }
@@ -333,8 +333,10 @@ const rxlib = new Proxy({
   'osc': (frequency: Tone.Unit.Frequency, type: Tone.ToneOscillatorType) => {
     return new Tone.OmniOscillator(frequency, type).start()
   },
-  'lfo': (frequency: Tone.Unit.Frequency, min?: number, max?: number) => {
-    return new Tone.LFO(frequency, min, max).start()
+  'lfo': (frequency: Tone.Unit.Frequency, type: Tone.ToneOscillatorType, min?: number, max?: number) => {
+    const lfo = new Tone.LFO(frequency, min, max).start()
+    lfo.type = type
+    return lfo
   },
   'synth': (...options: Entries) => {
     return new Tone.Synth(lispObj(...options))

@@ -21,12 +21,13 @@ todo
   - [x] synth params
   - [ ] more synths
   - [ ] supersaw!
-  - [ ] oscs and filters
-  - [ ] effects
+  - [x] oscs and filters
+  - [x] effects
+    - [ ] more effects
   - [ ] chord seq
   - [x] transpose
   - [x] rests (null notes)
-  - [ ] LFOs/envelopes, connecting nodes to params not via observables 🤔
+  - [x] LFOs/envelopes, connecting nodes to params not via observables 🤔
   - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
 - [ ] bugs/UI improvements
