@@ -1,4 +1,4 @@
-# cadence
+<h1 align="center"><img src="etc/icon.png" alt=""><br>cadence</h1>
 
 todo
 
