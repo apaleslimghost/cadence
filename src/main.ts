@@ -385,7 +385,7 @@ const rxlib = new Proxy({
   }),
   'play': curry((player: Tone.Player, [time, note]: NoteEvent) => {
     if(note) {
-      player.start(0)
+      player.start(time)
     }
 
     return [note]
