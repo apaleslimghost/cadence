@@ -14,6 +14,7 @@ import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
 import type { ValueHolder } from 'handsontable/plugins/persistentState';
+import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
 
 
 registerAllModules();
@@ -47,12 +48,12 @@ const colFromLetter = (col: string): number =>[...col].reduce(
 )
 
 abstract class Scope<Source> {
-  protected ctx: AudioContext
+  protected ctx: AnyAudioContext
   protected src: Source
   protected canvas: HTMLCanvasElement
   protected cctx: CanvasRenderingContext2D
 
-  constructor(ctx: AudioContext, src: Source, canvas: HTMLCanvasElement){
+  constructor(ctx: AnyAudioContext, src: Source, canvas: HTMLCanvasElement){
     this.ctx = ctx
     this.src = src
     this.canvas = canvas
@@ -96,7 +97,7 @@ class Oscilloscope extends Scope<Connectable> {
   private data: Uint8Array
   static FFT = 4096
 
-  constructor(ctx: AudioContext, src: Connectable, canvas: HTMLCanvasElement) {
+  constructor(ctx: AnyAudioContext, src: Connectable, canvas: HTMLCanvasElement) {
     super(ctx, src, canvas)
 
     this.anl = this.ctx.createAnalyser();
@@ -195,15 +196,15 @@ Handsontable.cellTypes.registerCellType('lisp', {
           })
 
           if(isConnectable(result)) {
-            // let canvas = td.querySelector('canvas')
-            // if(!canvas) {
-            //   canvas = document.createElement('canvas')
-            //   canvas.width = td.clientWidth * devicePixelRatio
-            //   canvas.height = td.clientHeight * devicePixelRatio
-            //   td.replaceChildren(canvas)
-            // }
-            // const osc = new Oscilloscope(ctx, result, canvas)
-            // osc.run()
+            let canvas = td.querySelector('canvas')
+            if(!canvas) {
+              canvas = document.createElement('canvas')
+              canvas.width = td.clientWidth * devicePixelRatio
+              canvas.height = td.clientHeight * devicePixelRatio
+              td.replaceChildren(canvas)
+            }
+            const osc = new Oscilloscope(Tone.getContext().rawContext, result, canvas)
+            osc.run()
           } else if(isObservable(result)) {
             td.textContent = '💤 pending'
             cellObservableSubscriptions[cellKey]?.unsubscribe()
