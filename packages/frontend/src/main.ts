@@ -13,17 +13,13 @@ import { finalize, fromEventPattern, isObservable, map, Observable, share, Subsc
 import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
-import type { ValueHolder } from 'handsontable/plugins/persistentState';
 import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
-
 
 registerAllModules();
 
 interface WithCallback<Args extends unknown[]> {
   callback: (...args: Args) => void
 }
-
-const hasCallback = <T extends unknown[]>(obj: unknown): obj is WithCallback<T> => (obj && typeof obj === 'object' && 'callback' in obj) ? true : false
 
 const cells = new SignalMap<string, Signal.Computed<unknown>>()
 const cellSubscriptions: Record<string, () => void> = {}
@@ -47,33 +43,6 @@ const colFromLetter = (col: string): number =>[...col].reduce(
   0
 )
 
-abstract class Scope<Source> {
-  protected ctx: AnyAudioContext
-  protected src: Source
-  protected canvas: HTMLCanvasElement
-  protected cctx: CanvasRenderingContext2D
-
-  constructor(ctx: AnyAudioContext, src: Source, canvas: HTMLCanvasElement){
-    this.ctx = ctx
-    this.src = src
-    this.canvas = canvas
-
-    this.cctx = this.canvas.getContext("2d")!;
-    this.cctx.strokeStyle = '#80D8FF';
-  }
-
-  clear() {
-    this.cctx.fillStyle   = 'white';
-  }
-
-  run() {
-    requestAnimationFrame(() => this.run());
-    this.draw()
-  }
-
-  abstract draw(): void
-}
-
 interface Connectable {
   connect<Dest extends AudioNode | AudioParam>(dest: Dest): Dest
 }
@@ -92,18 +61,36 @@ interface Stoppable {
 
 const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
 
-class Oscilloscope extends Scope<Connectable> {
+class Oscilloscope {
   private anl: AnalyserNode
   private data: Uint8Array
   static FFT = 4096
+  protected ctx: AnyAudioContext
+  protected src: Connectable
+  protected canvas: HTMLCanvasElement
+  protected cctx: CanvasRenderingContext2D
 
   constructor(ctx: AnyAudioContext, src: Connectable, canvas: HTMLCanvasElement) {
-    super(ctx, src, canvas)
+    this.ctx = ctx
+    this.src = src
+    this.canvas = canvas
+
+    this.cctx = this.canvas.getContext("2d")!;
+    this.cctx.strokeStyle = '#80D8FF';
 
     this.anl = this.ctx.createAnalyser();
     this.anl.fftSize = Oscilloscope.FFT;
     this.src.connect(this.anl);
     this.data = new Uint8Array(Oscilloscope.FFT);
+  }
+
+  clear() {
+    this.cctx.fillStyle   = 'white';
+  }
+
+  run() {
+    requestAnimationFrame(() => this.run());
+    this.draw()
   }
 
   draw() {
