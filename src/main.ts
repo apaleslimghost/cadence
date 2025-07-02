@@ -5,7 +5,7 @@ import './index.css';
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';
 
-import evaluate from '@cadence/compiler'
+import evaluate from './compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';

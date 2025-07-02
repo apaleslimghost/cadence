@@ -1,7 +1,11 @@
 {
-	"files": [],
-	"references": [
-		{ "path": "packages/compiler"},
-		{ "path": "packages/frontend"}
-	]
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "incremental": true,
+    "composite": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true
+  }
 }
