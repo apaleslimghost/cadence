@@ -284,6 +284,8 @@ function set(obj: any, path: any[], val: any) {
   return obj
 }
 
+type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
+
 const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
   '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.fan(...dests),
@@ -295,6 +297,20 @@ const rxlib = new Proxy({
     sources.forEach(s => s.connect(gain))
     return gain
   },
+  '+': curry((a: number, b: NoteEvent | Tone.FrequencyClass | number) => {
+    if(Array.isArray(b)) {
+      return [b[0], b[1] ? Tone.Frequency(b[1]).transpose(a) : b[1]] as const
+    }
+
+    if(b instanceof Tone.FrequencyClass) {
+      return b.transpose(a)
+    }
+
+    return a + b
+  }),
+  '-': curry((a: number, b: any): any => {
+    return rxlib['+'](-a, b)
+  }),
   '.': get,
   '.=': (source: Tone.ToneAudioNode, ...options: [string, unknown][]) => {
     source.set(Object.fromEntries(options))
@@ -346,8 +362,7 @@ const rxlib = new Proxy({
       })
     )
   },
-  'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: [Tone.Unit.Time, Tone.Unit.Note]) => {
-    console.log(time, note)
+  'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
     if(note) {
       synth.triggerAttackRelease(note, duration, time)
     }

@@ -23,6 +23,7 @@ todo
   - [ ] oscs and filters
   - [ ] effects
   - [ ] chord seq
+  - [ ] transpose
   - [x] rests (null notes)
   - [ ] LFOs/envelopes, connecting nodes to params not via observables 🤔
   - [x] easier .connect/.chain

@@ -88,7 +88,7 @@ const evaluate = (expression: Atom, scope: Scope, specials: Specials): unknown =
   if (DEBUG) console.log("RETURN", serialise(expression), expression, typeof expression);
 
   if (expression instanceof String) return expression.valueOf();
-  if (/^\d+(\.\d+)?$/.test(expression)) return parseFloat(expression);
+  if (/^-?\d+(\.\d+)?$/.test(expression)) return parseFloat(expression);
   if (typeof expression === "string") return scope[expression];
   return expression;
 };
