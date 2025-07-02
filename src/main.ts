@@ -14,6 +14,8 @@ import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import { curry } from 'lodash';
 import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
+import { TransportClass } from 'tone/build/esm/core/clock/Transport';
+import { TickParam } from 'tone/build/esm/core/clock/TickParam';
 
 registerAllModules();
 
@@ -124,6 +126,15 @@ const getCellKey = (column: number, row: number) => colLetter(column) + row.toSt
 type Atom = unknown | SExpr
 type SExpr = Atom[]
 
+function gcd(a: number, b: number): number{
+  return b ? gcd(b, a % b) : a;
+}
+
+function reduce(numerator: number, denominator: number){
+  const div = gcd(numerator, denominator);
+  return [numerator/div, denominator/div];
+}
+
 export const serialise = (expression: Atom): string => {
   if(Array.isArray(expression)) {
     return `(${expression.map(serialise).join(" ")})`
@@ -136,6 +147,20 @@ export const serialise = (expression: Atom): string => {
 
     if(expression instanceof Tone.TimeClass) {
       return expression.toBarsBeatsSixteenths()
+    }
+
+    if(expression instanceof Tone.Param || expression instanceof Tone.Signal) {
+      return expression.value + expression.units
+    }
+
+    if(expression instanceof TransportClass) {
+      const sig = typeof expression.timeSignature === 'number' ? reduce(expression.timeSignature, 4) : expression.timeSignature
+      if(sig[1] < 4) {
+        const mul = 4 / sig[1]
+        sig[0] *= mul
+        sig[1] *= mul
+      }
+      return serialise([ '⏯️', expression.bpm, sig ])
     }
 
     if(expression instanceof ToneClass) {
