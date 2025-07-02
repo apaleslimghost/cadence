@@ -345,6 +345,9 @@ const rxlib = new Proxy({
   'reverb': (...options: Entries) => {
     return new Tone.Reverb(lispObj(...options))
   },
+  'filter': (...options: Entries) => {
+    return new Tone.Filter(lispObj(...options))
+  },
   'sample': (url: string) => {
     return new Tone.Player(url)
   },
