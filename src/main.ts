@@ -267,15 +267,6 @@ const root = document.getElementById('root')!
 
 type SequenceEvents = (string | SequenceEvents)[]
 
-function get(obj: any, path: any[]) {
-  if(path.length === 1) {
-    const val = obj[path[0]]
-    return typeof val === 'function' ? val.bind(obj) : val
-  }
-
-  return get(obj[path[0]], path.slice(1))
-}
-
 function set(obj: any, path: any[], val: any) {
   if(path.length === 1) {
     obj[path[0]] = val
@@ -323,7 +314,7 @@ const rxlib = new Proxy({
   '-': curry((a: number, b: any): any => {
     return rxlib['+'](-a, b)
   }),
-  '.': get,
+  '.': _.get,
   '.=': (source: Tone.ToneAudioNode, ...options: Entries) => {
     source.set(lispObj(...options))
     return options
@@ -336,6 +327,12 @@ const rxlib = new Proxy({
     trans.timeSignature = signature
     trans.once('stop', () => trans.position = '0')
     return trans
+  },
+  'osc': (frequency: Tone.Unit.Frequency, type: Tone.ToneOscillatorType) => {
+    return new Tone.OmniOscillator(frequency, type).start()
+  },
+  'lfo': (frequency: Tone.Unit.Frequency, min?: number, max?: number) => {
+    return new Tone.LFO(frequency, min, max).start()
   },
   'synth': (...options: Entries) => {
     return new Tone.Synth(lispObj(...options))
