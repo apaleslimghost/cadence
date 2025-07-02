@@ -350,6 +350,12 @@ const rxlib = new Proxy({
   'filter': (...options: Entries) => {
     return new Tone.Filter(lispObj(...options))
   },
+  'chorus': (...options: Entries) => {
+    return new Tone.Chorus(lispObj(...options))
+  },
+  'delay': (...options: Entries) => {
+    return new Tone.FeedbackDelay(lispObj(...options))
+  },
   'sample': (url: string) => {
     return new Tone.Player(url)
   },
