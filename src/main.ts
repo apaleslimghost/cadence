@@ -9,7 +9,7 @@ import evaluate from './compiler'
 import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
-import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription, switchMap } from 'rxjs'
+import { defer, finalize, fromEventPattern, isObservable, map, Observable, share, Subscription, switchMap } from 'rxjs'
 import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import _, { curry } from 'lodash';
@@ -79,6 +79,7 @@ class Oscilloscope {
 
     this.cctx = this.canvas.getContext("2d")!;
     this.cctx.strokeStyle = '#80D8FF';
+    this.cctx.lineWidth = devicePixelRatio;
 
     this.anl = this.ctx.createAnalyser();
     this.anl.fftSize = Oscilloscope.FFT;
@@ -219,6 +220,7 @@ Handsontable.cellTypes.registerCellType('lisp', {
             osc.run()
           } else if(isObservable(result)) {
             td.textContent = '💤 pending'
+            console.log('resubscribe', cellKey)
             cellObservableSubscriptions[cellKey]?.unsubscribe()
             cellObservableSubscriptions[cellKey] = result.subscribe((args) => {
               pulse(td, '#E040FB33')
@@ -239,13 +241,14 @@ Handsontable.cellTypes.registerCellType('lisp', {
           console.error(error)
         }
       })
-    } else {
+    } else if(cells.has(cellKey)) {
       try {
         const result = cells.get(cellKey)?.get()
         if(isDisconnectable(result)) result.disconnect()
         if(isStoppable(result)) result.stop(0)
       } catch {}
 
+      console.log('unsubscribe', cellKey)
       cellSubscriptions[cellKey]?.()
       cellObservableSubscriptions[cellKey]?.unsubscribe()
       delete cellSubscriptions[cellKey]
@@ -290,11 +293,11 @@ const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
   '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.fan(...dests),
   '->>': (...sources: Tone.ToneAudioNode[]) => {
-    return sources.map(s => s.toDestination())
+    return sources.map(s => s?.toDestination())
   },
   '>>': (dest: Tone.ToneAudioNode, ...sources: Tone.ToneAudioNode[]) => {
     const gain = new Tone.Gain(0, 'decibels').connect(dest)
-    sources.forEach(s => s.connect(gain))
+    sources.forEach(s => s?.connect(gain))
     return gain
   },
   '+': curry((a: number, b: NoteEvent | Tone.FrequencyClass | number) => {
@@ -339,27 +342,36 @@ const rxlib = new Proxy({
     const loopProgress = transportProgress - repeat
     const startOffset = Math.floor(loopProgress * events.length)
 
-    const seq = new Tone.Sequence({
-      events,
-      subdivision
-    }).start(quantStart, startOffset)
+    let seq: Tone.Sequence, onStart: () => void, onStop: () => void
 
-    const onStart = () => seq.start(quantStart, startOffset)
-    const onStop = () => seq.stop();
-    Tone.getTransport().on('start', onStart)
-    Tone.getTransport().on('stop', onStop)
+    return defer(
+      () => {
+        console.log('seq start')
+        seq = new Tone.Sequence({
+          events,
+          subdivision
+        }).start(quantStart, startOffset)
+        onStart = () => seq.start(quantStart, startOffset)
+        onStop = () => seq.stop();
 
-    return fromToneCallback(seq).pipe(
+        Tone.getTransport().on('start', onStart)
+        Tone.getTransport().on('stop', onStop)
+
+        return fromToneCallback(seq).pipe(
+          share(),
+          finalize(() => {
+            console.log('seq stop')
+            Tone.getTransport().off('start', onStart)
+            Tone.getTransport().off('stop', onStop)
+            seq.stop()
+          })
+        )
+      }
+    ).pipe(
       map(([time, note]) => [
         Tone.Time(time),
         note !== '_' ? Tone.Frequency(note) : null
-      ]),
-      share(),
-      finalize(() => {
-        Tone.getTransport().off('start', onStart)
-        Tone.getTransport().off('stop', onStop)
-        seq.stop()
-      })
+      ])
     )
   },
   'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
