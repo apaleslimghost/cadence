@@ -220,7 +220,6 @@ Handsontable.cellTypes.registerCellType('lisp', {
             osc.run()
           } else if(isObservable(result)) {
             td.textContent = '💤 pending'
-            console.log('resubscribe', cellKey)
             cellObservableSubscriptions[cellKey]?.unsubscribe()
             cellObservableSubscriptions[cellKey] = result.subscribe((args) => {
               pulse(td, '#E040FB33')
@@ -248,7 +247,6 @@ Handsontable.cellTypes.registerCellType('lisp', {
         if(isStoppable(result)) result.stop(0)
       } catch {}
 
-      console.log('unsubscribe', cellKey)
       cellSubscriptions[cellKey]?.()
       cellObservableSubscriptions[cellKey]?.unsubscribe()
       delete cellSubscriptions[cellKey]
@@ -346,7 +344,6 @@ const rxlib = new Proxy({
 
     return defer(
       () => {
-        console.log('seq start')
         seq = new Tone.Sequence({
           events,
           subdivision
@@ -360,7 +357,6 @@ const rxlib = new Proxy({
         return fromToneCallback(seq).pipe(
           share(),
           finalize(() => {
-            console.log('seq stop')
             Tone.getTransport().off('start', onStart)
             Tone.getTransport().off('stop', onStop)
             seq.stop()
