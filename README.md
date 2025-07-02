@@ -15,7 +15,8 @@ todo
   - [ ] automerge?
   - [ ] collab?
 - [ ] more tonejs wrappers/primitives
-  - [ ] samples/banks
+  - [x] samples
+    - [ ] strudel banks
   - [ ] jux rev (thanks yaxu)
   - [x] synth params
   - [ ] more synths

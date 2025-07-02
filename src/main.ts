@@ -376,19 +376,16 @@ const rxlib = new Proxy({
       ])
     )
   },
-  'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
+  'play': curry((synth: Tone.Synth | Tone.Player, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
     if(note) {
-      synth.triggerAttackRelease(note, duration, time)
+      if(synth instanceof Tone.Synth) {
+        synth.triggerAttackRelease(note, duration, time)
+      } else if(synth.loaded) {
+        synth.start(time, 0, duration)
+      }
     }
 
     return [note, duration]
-  }),
-  'play': curry((player: Tone.Player, [time, note]: NoteEvent) => {
-    if(note) {
-      player.start(time)
-    }
-
-    return [note]
   }),
   '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
