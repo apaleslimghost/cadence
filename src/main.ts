@@ -287,6 +287,17 @@ function set(obj: any, path: any[], val: any) {
 
 type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
 
+type Entries = [string, ...unknown[]][]
+const lispObj = (...entries: Entries) => Object.fromEntries(
+  entries.map(([key, ...values]): [string, unknown] => {
+    if(values.length > 1) {
+      return [key, lispObj(...values as Entries)]
+    }
+
+    return [key, values[0]]
+  })
+)
+
 const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
   '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.fan(...dests),
@@ -313,8 +324,8 @@ const rxlib = new Proxy({
     return rxlib['+'](-a, b)
   }),
   '.': get,
-  '.=': (source: Tone.ToneAudioNode, ...options: [string, unknown][]) => {
-    source.set(Object.fromEntries(options))
+  '.=': (source: Tone.ToneAudioNode, ...options: Entries) => {
+    source.set(lispObj(...options))
     return options
   },
   '∘': _.flow,
@@ -326,14 +337,14 @@ const rxlib = new Proxy({
     trans.once('stop', () => trans.position = '0')
     return trans
   },
-  'synth': (...options: [string, unknown][]) => {
-    return new Tone.Synth(Object.fromEntries(options))
+  'synth': (...options: Entries) => {
+    return new Tone.Synth(lispObj(...options))
   },
-  'pluck': (...options: [string, unknown][]) => {
-    return new Tone.PluckSynth(Object.fromEntries(options))
+  'pluck': (...options: Entries) => {
+    return new Tone.PluckSynth(lispObj(...options))
   },
-  'reverb': (...options: [string, unknown][]) => {
-    return new Tone.Reverb(Object.fromEntries(options))
+  'reverb': (...options: Entries) => {
+    return new Tone.Reverb(lispObj(...options))
   },
   'sample': (url: string) => {
     return new Tone.Player(url)
