@@ -17,9 +17,13 @@ todo
 - [ ] more tonejs wrappers/primitives
   - [ ] samples/banks
   - [ ] jux rev (thanks yaxu)
-  - [ ] synth params
+  - [x] synth params
+  - [ ] more synths
+  - [ ] supersaw!
   - [ ] oscs and filters
   - [ ] effects
+  - [ ] chord seq
+  - [x] rests (null notes)
   - [ ] LFOs/envelopes, connecting nodes to params not via observables 🤔
   - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
@@ -32,6 +36,7 @@ todo
   - [ ] indistinguishable between deleting a cell that returns a reference to something and deleting the cell containing the thing
   - [x] starting loops that were initialised before the transport started (should work? doesn't consistently eg on load with persistent data)
   - [x] need to unsubscribe/stop(?) when editing a cell or if its dependencies update, not just on delete
+  - [ ] deleting a synth stops a seq it's connected to
 - [ ] midi
   - [ ] CCs
   - [ ] notes

@@ -12,7 +12,7 @@ import { Signal } from 'signal-polyfill';
 import { finalize, fromEventPattern, isObservable, map, Observable, share, Subscription, switchMap } from 'rxjs'
 import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
-import { curry } from 'lodash';
+import _, { curry } from 'lodash';
 import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
 import { TransportClass } from 'tone/build/esm/core/clock/Transport';
 import { TickParam } from 'tone/build/esm/core/clock/TickParam';
@@ -266,9 +266,41 @@ const root = document.getElementById('root')!
 
 type SequenceEvents = (string | SequenceEvents)[]
 
+function get(obj: any, path: any[]) {
+  if(path.length === 1) {
+    const val = obj[path[0]]
+    return typeof val === 'function' ? val.bind(obj) : val
+  }
+
+  return get(obj[path[0]], path.slice(1))
+}
+
+function set(obj: any, path: any[], val: any) {
+  if(path.length === 1) {
+    obj[path[0]] = val
+  }
+
+  set(obj[path[0]], path.slice(1), val)
+  return obj
+}
+
 const rxlib = new Proxy({
-  '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) =>  source.chain(...dests),
-  '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) =>  source.fan(...dests),
+  '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
+  '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.fan(...dests),
+  '->>': (...sources: Tone.ToneAudioNode[]) => {
+    return sources.map(s => s.toDestination())
+  },
+  '>>': (dest: Tone.ToneAudioNode, ...sources: Tone.ToneAudioNode[]) => {
+    const gain = new Tone.Gain(0, 'decibels').connect(dest)
+    sources.forEach(s => s.connect(gain))
+    return gain
+  },
+  '.': get,
+  '.=': (source: Tone.ToneAudioNode, ...options: [string, unknown][]) => {
+    source.set(Object.fromEntries(options))
+    return options
+  },
+  '∘': _.flow,
   'trans': (frequency: Tone.Unit.BPM, signature: [number, number] | number = 4) => {
     const trans = Tone.getTransport()
     trans.start('0')
@@ -277,8 +309,11 @@ const rxlib = new Proxy({
     trans.once('stop', () => trans.position = '0')
     return trans
   },
-  'synth': () => {
-    return new Tone.Synth()
+  'synth': (...options: [string, unknown][]) => {
+    return new Tone.Synth(Object.fromEntries(options))
+  },
+  'pluck': (...options: [string, unknown][]) => {
+    return new Tone.PluckSynth(Object.fromEntries(options))
   },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
     const seqDuration = Tone.Time(subdivision).toTicks() * events.length
@@ -301,7 +336,7 @@ const rxlib = new Proxy({
     return fromToneCallback(seq).pipe(
       map(([time, note]) => [
         Tone.Time(time),
-        Tone.Frequency(note)
+        note !== '_' ? Tone.Frequency(note) : null
       ]),
       share(),
       finalize(() => {
@@ -312,7 +347,11 @@ const rxlib = new Proxy({
     )
   },
   'trig-ar': curry((synth: Tone.Synth, duration: Tone.Unit.Time, [time, note]: [Tone.Unit.Time, Tone.Unit.Note]) => {
-    synth.triggerAttackRelease(note, duration, time)
+    console.log(time, note)
+    if(note) {
+      synth.triggerAttackRelease(note, duration, time)
+    }
+
     return [note, duration]
   }),
   '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
