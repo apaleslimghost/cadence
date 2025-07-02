@@ -278,10 +278,12 @@ function set(obj: any, path: any[], val: any) {
 
 type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
 
+const isPair = (a: unknown) => Array.isArray(a) && a.length === 2
+
 type Entries = [string, ...unknown[]][]
 const lispObj = (...entries: Entries) => Object.fromEntries(
   entries.map(([key, ...values]): [string, unknown] => {
-    if(values.length > 1) {
+    if(values.every(isPair)) {
       return [key, lispObj(...values as Entries)]
     }
 
