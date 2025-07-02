@@ -332,6 +332,12 @@ const rxlib = new Proxy({
   'pluck': (...options: [string, unknown][]) => {
     return new Tone.PluckSynth(Object.fromEntries(options))
   },
+  'reverb': (...options: [string, unknown][]) => {
+    return new Tone.Reverb(Object.fromEntries(options))
+  },
+  'sample': (url: string) => {
+    return new Tone.Player(url)
+  },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
     const seqDuration = Tone.Time(subdivision).toTicks() * events.length
     const quantStart = '@' + subdivision
@@ -376,6 +382,13 @@ const rxlib = new Proxy({
     }
 
     return [note, duration]
+  }),
+  'play': curry((player: Tone.Player, [time, note]: NoteEvent) => {
+    if(note) {
+      player.start(0)
+    }
+
+    return [note]
   }),
   '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
