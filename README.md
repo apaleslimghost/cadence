@@ -1,46 +1,62 @@
-<h1 align="center"><img src="etc/icon.png" alt=""><br>cadence</h1>
+<h1 align="center">
+<a href="https://cadence.ghost.computer">
+<img src="etc/icon.png" alt=""><br>cadence
+</a>
+</h1>
 
-todo
+**cadence** is a spreadsheet-based live coding environment for web audio, with a Lisp-inspired embedded language.
 
-- [x] cells ui
-- [x] parsing and running exprs in cells
-- [x] reactive cell references
-- [x] primitives for generating and processing observables
-- [x] visual cell ui
-  - [x] observable values
-  - [x] observable update flashing
-  - [ ] controls
-  - [ ] audionode oscilloscopes
-  - [x] data persistence
-  - [ ] automerge?
-  - [ ] collab?
-- [ ] more tonejs wrappers/primitives
-  - [x] samples
-    - [ ] strudel banks
-  - [ ] jux rev (thanks yaxu)
-  - [x] synth params
-  - [ ] more synths
-  - [ ] supersaw!
-  - [x] oscs and filters
-  - [x] effects
-    - [ ] more effects
-  - [ ] chord seq
-  - [x] transpose
-  - [x] rests (null notes)
-  - [x] LFOs/envelopes, connecting nodes to params not via observables 🤔
-  - [x] easier .connect/.chain
-  - [x] spreadsheet ranges for arrays
-- [ ] bugs/UI improvements
-  - [x] stopping/restarting transport
-  - [x] display pending observable value
-  - [x] loop sync, quantisation etc
-  - [x] split actual values in observable from displayed values in cell (hookable serialise)
-  - [ ] flash cell on read(? is that even possible?)
-  - [ ] indistinguishable between deleting a cell that returns a reference to something and deleting the cell containing the thing
-  - [x] starting loops that were initialised before the transport started (should work? doesn't consistently eg on load with persistent data)
-  - [x] need to unsubscribe/stop(?) when editing a cell or if its dependencies update, not just on delete
-  - [x] deleting a synth stops a seq it's connected to
-- [ ] midi
-  - [ ] CCs
-  - [ ] notes
-    - [ ] computer keyboard cell type???
+## Getting started
+
+### The language
+
+- Numbers:  `1`, `1.37`, `-2`
+- Strings: `'string`, `"longer string"`
+- Arrays & tuples of strings: `'(a b c)`
+- Referencing in arrays: <code>`(string ,value)</code>
+- Calling functions: `(function-name ...args)`
+- Defining functions: `(λ (...argnames) ...body)`
+- Cell references: `A1`, `ZZ137`
+
+### Basics of music
+
+Everything in **cadence** is synced to the **global transport**. Start it by calling the `trans` function, which also sets the tempo and time signature:
+
+| | A |
+|-|-|
+| **1** | `(trans 120 '(4 4))` |
+
+The `seq` function defines a sequence of **note events** that fires at a regular interval. This sequences emits the next note from the array every quarter note (`'4n`):
+
+| | A |
+|-|-|
+| **2** | `(seq '4n '(c4 eb4 f4 ab4))` |
+
+To distinguish note names from cell references, by convention we write them in lowercase.
+
+The `synth` function creates a basic synthesiser:
+
+| | A |
+|-|-|
+| **3** | `(synth)` |
+
+To hear the synth, we need to connect it to the audio destination with the `->> function`:
+
+| | A |
+|-|-|
+| **4** | `(->> A3)` |
+
+And finally, to play notes, we map the note sequence with the `$>` function and call the `play` function on every event. `play` takes a reference to a playable object like a `synth`, a note duration, and a note event. It's **curried**, so by leaving off the last argument we get a function that can be passed into `$>` to recieve note events:
+
+| | B |
+|-|-|
+| **2** | `($> A2 (play A3 '8n))` |
+
+Putting that all together, we get a simple melody:
+
+| | A | B |
+|-|-|-|
+| **1** | `(trans 120 '(4 4))` | |
+| **2** | `(seq '4n '(c4 eb4 f4 ab4))` | `($> A2 (play A3 '8n))` |
+| **3** | `(synth)` | |
+| **4** | `(->> A3)` | |
