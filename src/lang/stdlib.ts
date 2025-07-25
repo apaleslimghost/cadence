@@ -1,8 +1,27 @@
 import _, { curry } from 'lodash';
-import { defer, share, finalize, map, Observable, switchMap } from 'rxjs';
+import { defer, share, finalize, map, Observable, switchMap, fromEventPattern } from 'rxjs';
 import * as Tone from 'tone';
-import { NoteEvent, Entries, lispObj, SequenceEvents, fromToneCallback, colFromLetter, getCellKey, cells } from '../main';
 import { serialise } from '../serialise';
+import { Entries, NoteEvent, SequenceEvents, WithCallback } from '../types';
+import { cells, colFromLetter, getCellKey } from '../store';
+
+const isPair = (a: unknown) => Array.isArray(a) && a.length === 2
+
+const lispObj = (...entries: Entries) => Object.fromEntries(
+  entries.map(([key, ...values]): [string, unknown] => {
+    if(values.every(isPair)) {
+      return [key, lispObj(...values as Entries)]
+    }
+
+    return [key, values[0]]
+  })
+)
+
+const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEventPattern(
+  handler => tone.callback = handler,
+  () => tone.callback = () => {},
+  (...args) => args as T
+)
 
 const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),

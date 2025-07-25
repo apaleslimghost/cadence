@@ -1,3 +1,4 @@
+import * as Tone from 'tone'
 
 export interface WithCallback<Args extends unknown[]> {
   callback: (...args: Args) => void
@@ -20,3 +21,9 @@ export interface Stoppable {
 }
 
 export const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
+
+export type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
+
+export type Entries = [string, ...unknown[]][]
+
+export type SequenceEvents = (string | SequenceEvents)[]

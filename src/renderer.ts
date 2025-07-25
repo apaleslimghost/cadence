@@ -1,11 +1,22 @@
 import { isObservable } from 'rxjs';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import * as Tone from 'tone';
-import { getCellKey, cellSubscriptions, cells, pulse, cellObservableSubscriptions } from './main';
+import { getCellKey, cellSubscriptions, cells, cellObservableSubscriptions } from './store';
 import Oscilloscope from './oscilloscope';
 import { serialise } from './serialise';
 import { isConnectable, isDisconnectable, isStoppable } from './types';
 import type Handsontable from 'handsontable'
+
+export const pulse = (el: HTMLElement, color: string) => {
+  el.animate([
+	 { background: color },
+	 { background: 'transparent' },
+  ], {
+	 duration: 200,
+	 easing: 'ease-out'
+  })
+}
+
 
 const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, column, prop, value, cellProps) => {
 	const cellKey = getCellKey(column + 1, row + 1);
