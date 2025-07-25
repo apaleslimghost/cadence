@@ -10,14 +10,13 @@ import { SignalMap } from 'signal-utils/map';
 import { effect } from 'signal-utils/subtle/microtask-effect';
 import { Signal } from 'signal-polyfill';
 import { defer, finalize, fromEventPattern, isObservable, map, Observable, share, Subscription, switchMap } from 'rxjs'
-import { Tone as ToneClass } from 'tone/build/esm/core/Tone'
 import * as Tone from 'tone'
 import _, { curry } from 'lodash';
 import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
-import { TransportClass } from 'tone/build/esm/core/clock/Transport';
 import { TickParam } from 'tone/build/esm/core/clock/TickParam';
 import Oscilloscope from './oscilloscope';
 import { isConnectable, isDisconnectable, isStoppable, WithCallback } from './types';
+import { serialise } from './serialise';
 
 registerAllModules();
 
@@ -53,71 +52,6 @@ const pulse = (el: HTMLElement, color: string) => {
 }
 
 const getCellKey = (column: number, row: number) => colLetter(column) + row.toString(10)
-
-type Atom = unknown | SExpr
-type SExpr = Atom[]
-
-function gcd(a: number, b: number): number{
-  return b ? gcd(b, a % b) : a;
-}
-
-function reduce(numerator: number, denominator: number){
-  const div = gcd(numerator, denominator);
-  return [numerator/div, denominator/div];
-}
-
-export const serialise = (expression: Atom): string => {
-  if(Array.isArray(expression)) {
-    return `(${expression.map(serialise).join(" ")})`
-  }
-
-  if(typeof expression === 'object') {
-    if(expression instanceof Tone.FrequencyClass) {
-      return expression.toNote().toLowerCase()
-    }
-
-    if(expression instanceof Tone.TimeClass) {
-      return expression.toBarsBeatsSixteenths()
-    }
-
-    if(expression instanceof Tone.Param || expression instanceof Tone.Signal) {
-      return expression.value + expression.units
-    }
-
-    if(expression instanceof TransportClass) {
-      const sig = typeof expression.timeSignature === 'number' ? reduce(expression.timeSignature, 4) : expression.timeSignature
-      if(sig[1] < 4) {
-        const mul = 4 / sig[1]
-        sig[0] *= mul
-        sig[1] *= mul
-      }
-      return serialise([ '⏯️', expression.bpm, sig ])
-    }
-
-    if(expression instanceof ToneClass) {
-      return '🎶 ' + expression.toString()
-    }
-  }
-
-  if(typeof expression === 'number') {
-    return expression === Math.round(expression) ? expression.toString(10) : expression.toFixed(3)
-  }
-
-  if(typeof expression === 'string') {
-    return expression
-  }
-
-  if(typeof expression === 'boolean') {
-    return expression.toString()
-  }
-
-  if(expression == null) {
-    return '🔃 empty'
-  }
-
-  return Object.getPrototypeOf(expression ?? Object.create(null))?.constructor?.name
-    ?? Object.prototype.toString.call(expression).replace(/\[object (.+)\]/, '$1')
-}
 
 Handsontable.cellTypes.registerCellType('lisp', {
   renderer(instance, td, row, column, prop, value, cellProps) {
