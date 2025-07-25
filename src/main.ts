@@ -16,23 +16,20 @@ import _, { curry } from 'lodash';
 import type { AnyAudioContext } from 'tone/build/esm/core/context/AudioContext';
 import { TransportClass } from 'tone/build/esm/core/clock/Transport';
 import { TickParam } from 'tone/build/esm/core/clock/TickParam';
+import Oscilloscope from './oscilloscope';
+import { isConnectable, isDisconnectable, isStoppable, WithCallback } from './types';
 
 registerAllModules();
-
-interface WithCallback<Args extends unknown[]> {
-  callback: (...args: Args) => void
-}
 
 const cells = new SignalMap<string, Signal.Computed<unknown>>()
 const cellSubscriptions: Record<string, () => void> = {}
 const cellObservableSubscriptions: Record<string, Subscription> = {}
 
-// @ts-ignore
-window.cells = cells
-// @ts-ignore
-window.cellSubscriptions = cellSubscriptions
-// @ts-ignore
-window.cellObservableSubscriptions = cellObservableSubscriptions
+Object.assign(window, {
+  cells,
+  cellSubscriptions,
+  cellObservableSubscriptions
+})
 
 const colLetter = (col: number): string =>
   col <= 0
@@ -44,73 +41,6 @@ const colFromLetter = (col: string): number =>[...col].reduce(
   (acc, c) => acc * 26 + (c.charCodeAt(0) - 64),
   0
 )
-
-interface Connectable {
-  connect<Dest extends AudioNode | AudioParam>(dest: Dest): Dest
-}
-
-const isConnectable = (thing: unknown): thing is Connectable => (thing && typeof thing === 'object') ? ('connect' in thing && typeof thing.connect === 'function') : false
-
-interface Disconnectable {
-  disconnect(): void
-}
-
-const isDisconnectable = (thing: unknown): thing is Disconnectable => (thing && typeof thing === 'object') ? ('disconnect' in thing && typeof thing.disconnect === 'function') : false
-
-interface Stoppable {
-  stop(...args: unknown[]): void
-}
-
-const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
-
-class Oscilloscope {
-  private anl: AnalyserNode
-  private data: Uint8Array
-  static FFT = 4096
-  protected ctx: AnyAudioContext
-  protected src: Connectable
-  protected canvas: HTMLCanvasElement
-  protected cctx: CanvasRenderingContext2D
-
-  constructor(ctx: AnyAudioContext, src: Connectable, canvas: HTMLCanvasElement) {
-    this.ctx = ctx
-    this.src = src instanceof Tone.LFO ? src['_oscillator'] : src
-    this.canvas = canvas
-
-    this.cctx = this.canvas.getContext("2d")!;
-    this.cctx.strokeStyle = '#80D8FF';
-    this.cctx.lineWidth = devicePixelRatio;
-
-    this.anl = this.ctx.createAnalyser();
-    this.anl.fftSize = src instanceof Tone.LFO ? 32768 : Oscilloscope.FFT;
-    this.src.connect(this.anl);
-    this.data = new Uint8Array(Oscilloscope.FFT);
-  }
-
-  clear() {
-    this.cctx.fillStyle   = 'white';
-  }
-
-  run() {
-    requestAnimationFrame(() => this.run());
-    this.draw()
-  }
-
-  draw() {
-    this.anl.getByteTimeDomainData(this.data);
-    this.cctx.clearRect(0 , 0, this.canvas.width, this.canvas.height);
-
-    this.cctx.beginPath();
-    for(let i=0; i < this.data.length; i++){
-        const x = i * (this.canvas.width * 2 / this.data.length);
-        const v = this.data[i] / 128.0;
-        const y = this.canvas.height - v * this.canvas.height / 2;
-        if(i === 0) this.cctx.moveTo(x,y);
-        else this.cctx.lineTo(x,y);
-    }
-    this.cctx.stroke();
-  }
-}
 
 const pulse = (el: HTMLElement, color: string) => {
   el.animate([
