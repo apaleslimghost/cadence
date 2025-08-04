@@ -6,6 +6,7 @@ import { monokai } from '@fsegurai/codemirror-theme-monokai';
 import { keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
 import {bracketMatching} from '@codemirror/language';
+import { Cadence } from './lang/codemirror';
 
 let instance: CodeMirrorEditor
 
@@ -22,6 +23,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 				closeBrackets(),
 				bracketMatching(),
 				monokai,
+				Cadence(),
 				Prec.high(keymap.of(closeBracketsKeymap)),
 				Prec.highest(keymap.of([{
 					key: 'Enter',

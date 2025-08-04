@@ -64,7 +64,7 @@ html, body, #root {
   /* background: var(--ht-cell-editor-background-color);
   color: var(--ht-cell-editor-foreground-color); */
   border: 2px solid var(--ht-cell-editor-border-color);
-  box-shadow: 0 0 10px 2px var(--ht-cell-editor-shadow-color);
+  /* box-shadow: 0 0 10px 2px var(--ht-cell-editor-shadow-color); */
 }
 
 .cm-focused .cm-cursor {

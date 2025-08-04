@@ -26,6 +26,8 @@
     "@codemirror/view": "^6.38.1",
     "@fontsource/iosevka-curly": "^5.2.5",
     "@fsegurai/codemirror-theme-monokai": "^6.2.0",
+    "@lezer/generator": "^1.8.0",
+    "@lezer/highlight": "^1.2.1",
     "codemirror": "^6.0.2",
     "handsontable": "^15.3.0",
     "lodash": "^4.17.21",

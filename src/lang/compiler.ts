@@ -4,12 +4,6 @@ const DEBUG = false;
 
 type Scope = Record<string, unknown>
 
-parse.Parser.quotes = /['`,←]/;
-parse.Parser.quotes_map = {
-  ...parse.Parser.quotes_map,
-  '←': 'subscribe'
-}
-
 type Specials = Record<string, (expr: SExpr, scope: Scope, specials: Specials) => any>
 
 const defaultSpecials: Specials = {
