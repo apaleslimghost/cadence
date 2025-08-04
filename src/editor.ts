@@ -59,7 +59,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 			changes: [{
 				from: 0,
 				to: this.editor.state.doc.length,
-				invert: newValue
+				insert: newValue
 			}]
 		})
 	}
