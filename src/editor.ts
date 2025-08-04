@@ -2,13 +2,21 @@
 import Handsontable from 'handsontable';
 import {EditorView, minimalSetup} from 'codemirror'
 import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { monokai } from '@fsegurai/codemirror-theme-monokai';
 import { keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
-import {bracketMatching} from '@codemirror/language';
+import {bracketMatching, HighlightStyle, syntaxHighlighting} from '@codemirror/language';
 import { Cadence } from './lang/codemirror';
+import { tags as t } from '@lezer/highlight';
+import c from '@quarterto/colours'
 
 let instance: CodeMirrorEditor
+
+const theme = HighlightStyle.define([
+	{ tag: t.paren, color: c.steel.light },
+	{ tag: t.function(t.variableName), color: c.apple.primary },
+	{ tag: t.string, color: c.lemon.light },
+	{ tag: t.number, color: c.violet.light },
+])
 
 export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 	editor: EditorView
@@ -22,7 +30,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 				minimalSetup,
 				closeBrackets(),
 				bracketMatching(),
-				monokai,
+				syntaxHighlighting(theme),
 				Cadence(),
 				Prec.high(keymap.of(closeBracketsKeymap)),
 				Prec.highest(keymap.of([{
@@ -51,7 +59,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.hot.addHook('afterScrollVertically', () => this.refreshDimensions());
 	}
 
-	open() {
+	refreshDimensions() {
 		const rect = this.getEditedCellRect()
 		if(!rect) return
 

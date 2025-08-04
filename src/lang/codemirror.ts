@@ -49,7 +49,7 @@ export const CadenceLanguage = LRLanguage.define({
     ]
   }),
   languageData: {
-
+    closeBrackets: ['(', '"']
   }
 })
 
