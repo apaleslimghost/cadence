@@ -9,6 +9,7 @@ import * as Tone from 'tone'
 
 import renderer from './renderer';
 import { runCell } from './store';
+import CodeMirrorEditor from './editor';
 
 registerAllModules();
 
@@ -18,6 +19,7 @@ const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
   data: [[]],
   renderer,
+  editor: CodeMirrorEditor,
   minCols: 20,
   minRows: 100,
   colWidths: 200,
