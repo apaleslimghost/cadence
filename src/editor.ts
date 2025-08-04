@@ -1,11 +1,10 @@
 
 import Handsontable from 'handsontable';
 import {EditorView, minimalSetup} from 'codemirror'
-import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
+import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { monokai } from '@fsegurai/codemirror-theme-monokai';
 import { keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
-import { parinferExtension } from '@jurjanpaul/codemirror6-parinfer';
 
 let instance: CodeMirrorEditor
 
@@ -19,8 +18,9 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.editor = new EditorView({
 			extensions: [
 				minimalSetup,
-				parinferExtension(),
+				closeBrackets(),
 				monokai,
+				Prec.high(keymap.of(closeBracketsKeymap)),
 				Prec.highest(keymap.of([{
 					key: 'Enter',
 					run: (view) => {

@@ -25,7 +25,6 @@
     "@codemirror/view": "^6.38.1",
     "@fontsource/iosevka-curly": "^5.2.5",
     "@fsegurai/codemirror-theme-monokai": "^6.2.0",
-    "@jurjanpaul/codemirror6-parinfer": "^0.1.2",
     "codemirror": "^6.0.2",
     "handsontable": "^15.3.0",
     "lodash": "^4.17.21",
