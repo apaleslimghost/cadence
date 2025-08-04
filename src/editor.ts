@@ -38,6 +38,14 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper.style[this.hot.isRtl() ? 'right' : 'left'] = `${start}px`;
 		this.wrapper.style.margin = '0px';
 		this.wrapper.style.display = '';
+
+		this.editor.focus()
+		this.editor.dispatch({
+			selection: {
+				anchor: this.getValue().length,
+				head: this.getValue().length,
+			}
+		})
 	}
 
 	getValue() {
