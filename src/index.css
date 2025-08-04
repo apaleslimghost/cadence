@@ -60,11 +60,16 @@ html, body, #root {
   z-index: 300;
 }
 
+.cm-editor {
+  box-sizing: border-box;
+  background: var(--ht-cell-editor-background-color);
+  color: var(--ht-cell-editor-foreground-color);
+  border: 1px solid var(--ht-cell-editor-border-color);
+}
+
 .cm-editor.cm-focused {
-  /* background: var(--ht-cell-editor-background-color);
-  color: var(--ht-cell-editor-foreground-color); */
   border: 2px solid var(--ht-cell-editor-border-color);
-  /* box-shadow: 0 0 10px 2px var(--ht-cell-editor-shadow-color); */
+  box-shadow: 0 0 5px 2px var(--ht-cell-editor-shadow-color);
 }
 
 .cm-focused .cm-cursor {
