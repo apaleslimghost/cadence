@@ -1,6 +1,7 @@
 import 'handsontable/styles/handsontable.min.css';
 import 'handsontable/styles/ht-theme-main.min.css';
 import './index.css';
+import colours from './palette'
 
 import Handsontable from 'handsontable';
 import { registerAllModules } from 'handsontable/registry';

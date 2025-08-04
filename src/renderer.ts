@@ -6,7 +6,7 @@ import Oscilloscope from './oscilloscope';
 import { serialise } from './serialise';
 import { isConnectable, isDisconnectable, isStoppable } from './types';
 import type Handsontable from 'handsontable'
-import colours from '@quarterto/colours';
+import colours from './palette';
 
 export const pulse = (el: HTMLElement, color: string) => {
 	el.animate([
@@ -26,7 +26,7 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 			try {
 				td.removeAttribute('title');
 				const result = cells.get(cellKey)?.get();
-				pulse(td, colours.aqua.primary);
+				pulse(td, colours.aqua[4]);
 
 				if (isConnectable(result)) {
 					let canvas = td.querySelector('canvas');
@@ -42,7 +42,7 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 					td.textContent = '💤 pending';
 					cellObservableSubscriptions[cellKey]?.unsubscribe();
 					cellObservableSubscriptions[cellKey] = result.subscribe((args) => {
-						pulse(td, colours.fuchsia.primary);
+						pulse(td, colours.fuchsia[4]);
 						td.textContent = serialise(args);
 					});
 				} else {

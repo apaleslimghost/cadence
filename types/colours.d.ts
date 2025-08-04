@@ -1,5 +1,6 @@
 declare module "@quarterto/colours" {
 	type Colour = [string, string, string, string, string, string, string] & Record<
+		| number
 		| 'darkest'
 		| 'deep'
 		| 'darker'

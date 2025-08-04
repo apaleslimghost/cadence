@@ -1,6 +1,7 @@
 import { AnyAudioContext } from "tone/build/esm/core/context/AudioContext"
 import * as Tone from 'tone'
 import { Connectable } from "./types"
+import colours from './palette';
 
 export default class Oscilloscope {
   static FFT = 4096
@@ -18,7 +19,7 @@ export default class Oscilloscope {
 	 this.canvas = canvas
 
 	 this.cctx = this.canvas.getContext("2d")!;
-	 this.cctx.strokeStyle = '#80D8FF';
+	 this.cctx.strokeStyle = colours.ocean[5];
 	 this.cctx.lineWidth = devicePixelRatio;
 
 	 this.anl = this.ctx.createAnalyser();

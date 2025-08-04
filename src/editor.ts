@@ -7,15 +7,15 @@ import { Prec } from '@codemirror/state';
 import {bracketMatching, HighlightStyle, syntaxHighlighting} from '@codemirror/language';
 import { Cadence } from './lang/codemirror';
 import { tags as t } from '@lezer/highlight';
-import c from '@quarterto/colours'
+import c from './palette'
 
 let instance: CodeMirrorEditor
 
 const theme = HighlightStyle.define([
-	{ tag: t.paren, color: c.steel.light },
-	{ tag: t.function(t.variableName), color: c.apple.primary },
-	{ tag: t.string, color: c.lemon.light },
-	{ tag: t.number, color: c.violet.light },
+	{ tag: t.paren, color: c.steel[5] },
+	{ tag: t.function(t.variableName), color: c.apple[5] },
+	{ tag: t.string, color: c.lemon[7] },
+	{ tag: t.number, color: c.violet[7] },
 ])
 
 export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
