@@ -1,6 +1,7 @@
 
 import Handsontable from 'handsontable';
 import {EditorView, minimalSetup} from 'codemirror'
+import { autocompletion, closeBrackets } from '@codemirror/autocomplete';
 
 let instance: CodeMirrorEditor
 
@@ -12,7 +13,10 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		super(hot)
 		this.wrapper = this.hot.rootDocument.createElement('div')
 		this.editor = new EditorView({
-			extensions: [minimalSetup],
+			extensions: [
+				minimalSetup,
+				closeBrackets()
+			],
 			parent: this.wrapper
 		})
 
@@ -23,7 +27,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 
 	open() {
 		const rect = this.getEditedCellRect()
-		if(!rect || !this.wrapper) return
+		if(!rect) return
 
 		const {
 			top,
@@ -53,8 +57,6 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 	}
 
 	setValue(newValue?: any) {
-		if(!this.editor) return
-
 		this.editor.dispatch({
 			changes: [{
 				from: 0,
