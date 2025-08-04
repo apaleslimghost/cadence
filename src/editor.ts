@@ -45,6 +45,10 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper.classList.add('htCodemirror')
 		this.wrapper.style.display = 'none'
 		this.hot.rootElement.appendChild(this.wrapper)
+
+
+		this.hot.addHook('afterScrollHorizontally', () => this.refreshDimensions());
+		this.hot.addHook('afterScrollVertically', () => this.refreshDimensions());
 	}
 
 	open() {
@@ -64,6 +68,10 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper.style[this.hot.isRtl() ? 'right' : 'left'] = `${start}px`;
 		this.wrapper.style.margin = '0px';
 		this.wrapper.style.display = '';
+	}
+
+	open() {
+		this.refreshDimensions()
 
 		this.editor.focus()
 		this.editor.dispatch({
