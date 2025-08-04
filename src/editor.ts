@@ -5,6 +5,7 @@ import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/
 import { monokai } from '@fsegurai/codemirror-theme-monokai';
 import { keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
+import {bracketMatching} from '@codemirror/language';
 
 let instance: CodeMirrorEditor
 
@@ -19,6 +20,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 			extensions: [
 				minimalSetup,
 				closeBrackets(),
+				bracketMatching(),
 				monokai,
 				Prec.high(keymap.of(closeBracketsKeymap)),
 				Prec.highest(keymap.of([{
