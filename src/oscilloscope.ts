@@ -20,7 +20,7 @@ export default class Oscilloscope {
 
 	 this.cctx = this.canvas.getContext("2d")!;
 	 this.cctx.strokeStyle = colours.ocean[5];
-	 this.cctx.lineWidth = devicePixelRatio;
+	 this.cctx.lineWidth = devicePixelRatio * 2;
 
 	 this.anl = this.ctx.createAnalyser();
 	 this.anl.fftSize = src instanceof Tone.LFO ? 32768 : 4096;

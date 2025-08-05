@@ -14,7 +14,7 @@ let instance: CodeMirrorEditor
 const theme = HighlightStyle.define([
 	{ tag: t.paren, color: c.steel[5] },
 	{ tag: t.function(t.variableName), color: c.apple[5] },
-	{ tag: t.string, color: c.lemon[7] },
+	{ tag: t.string, color: c.lemon[8] },
 	{ tag: t.number, color: c.violet[7] },
 ])
 
@@ -88,10 +88,22 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 				head: this.getValue().length,
 			}
 		})
+
+		this.hot.getShortcutManager().setActiveContextName('editor')
 	}
 
 	getValue() {
 		return this.editor?.state.doc.toString()
+	}
+
+	refreshValue() {
+		const physicalRow = this.hot.toPhysicalRow(this.row);
+		const sourceData = this.hot.getSourceDataAtCell(physicalRow, this.col);
+
+		this.originalValue = sourceData;
+
+		this.setValue(sourceData);
+		this.refreshDimensions();
 	}
 
 	setValue(newValue?: any) {
