@@ -18,6 +18,17 @@ const theme = HighlightStyle.define([
 	{ tag: t.number, color: c.violet[7] },
 ])
 
+// - [x] deleting a cell spawns an empty unfocused editor in that cell
+// - [ ] enter shortcut doesn't work in an editor created by typing instead of doubleclicking
+// - [ ] shouldn't autoclose single quotes
+// - [ ] highlighting for:
+//   - [ ] function calls
+//   - [ ] operator-like functions
+//   - [ ] numbers
+//   - [ ] symbols/other quoted expressions
+//   - [ ] numbers
+
+
 export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 	editor: EditorView
 	wrapper: HTMLDivElement
@@ -36,6 +47,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 				Prec.highest(keymap.of([{
 					key: 'Enter',
 					run: (view) => {
+						console.log('enter')
 						this.finishEditing()
 						return true
 					}
@@ -75,11 +87,11 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper.style.top = `${top}px`;
 		this.wrapper.style[this.hot.isRtl() ? 'right' : 'left'] = `${start}px`;
 		this.wrapper.style.margin = '0px';
-		this.wrapper.style.display = '';
 	}
 
 	open() {
 		this.refreshDimensions()
+		this.wrapper.style.display = '';
 
 		this.editor.focus()
 		this.editor.dispatch({
