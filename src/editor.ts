@@ -2,9 +2,10 @@
 import Handsontable from 'handsontable';
 import {EditorView, minimalSetup} from 'codemirror'
 import { autocompletion, closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
-import { keymap } from '@codemirror/view';
+import { drawSelection, highlightSpecialChars, keymap } from '@codemirror/view';
 import { Prec } from '@codemirror/state';
-import {bracketMatching, HighlightStyle, syntaxHighlighting} from '@codemirror/language';
+import {bracketMatching, defaultHighlightStyle, HighlightStyle, syntaxHighlighting} from '@codemirror/language';
+import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { Cadence } from './lang/codemirror';
 import { tags as t } from '@lezer/highlight';
 import c from './palette'
@@ -38,26 +39,21 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper = this.hot.rootDocument.createElement('div')
 		this.editor = new EditorView({
 			extensions: [
-				minimalSetup,
+				highlightSpecialChars(),
+				history(),
+				drawSelection(),
+				syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+				keymap.of([
+					...defaultKeymap.filter(
+						map => !['Escape', 'Enter'].includes(map.key!)
+					),
+					...historyKeymap,
+				]),
 				closeBrackets(),
 				bracketMatching(),
 				syntaxHighlighting(theme),
 				Cadence(),
 				Prec.high(keymap.of(closeBracketsKeymap)),
-				Prec.highest(keymap.of([{
-					key: 'Enter',
-					run: (view) => {
-						console.log('enter')
-						this.finishEditing()
-						return true
-					}
-				}, {
-					key: 'Escape',
-					run: (view) => {
-						this.finishEditing(true)
-						return true
-					}
-				}]))
 			],
 			parent: this.wrapper
 		})
@@ -89,8 +85,9 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 		this.wrapper.style.margin = '0px';
 	}
 
-	open() {
+	open(event: Event) {
 		this.refreshDimensions()
+		console.log('open', event)
 		this.wrapper.style.display = '';
 
 		this.editor.focus()
