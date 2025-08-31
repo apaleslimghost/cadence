@@ -13,13 +13,16 @@ const parser = buildParser(`
     String |
     Number |
     Quoted { "'" expression } |
-    Application { "(" expression* ")" } |
+    Application {
+      "("
+      ApplicationHead { expression } expression*
+      ")"
+    } |
     List { "[" expression* "]" }
   }
 
-
   @tokens {
-    Identifier { $[a-zA-Z_\\-0-9]+ }
+    Identifier { $[a-zA-Z_\\-0-9=<>.∘\\*\\+]+ }
 
     String { '"' (!["\\\\] | "\\\\" _)* '"' }
 
@@ -27,7 +30,7 @@ const parser = buildParser(`
 
     Number { @digit+ ( "." @digit+ )? }
 
-    space { $[ \\t\\n\\r]+ }
+    space { @whitespace+ }
 
     "(" ")" "[" "]"
 
@@ -36,10 +39,6 @@ const parser = buildParser(`
 
   @detectDelim
 `)
-
-console.log(
-  parser.parse("'(hello)")
-)
 
 export const CadenceLanguage = LRLanguage.define({
   parser: parser.configure({
@@ -56,6 +55,7 @@ export const CadenceLanguage = LRLanguage.define({
         String: t.string,
         Number: t.number,
         "( ) [ ]": t.paren,
+        'ApplicationHead/...': t.function(t.variableName),
         "Quoted!": t.labelName,
       })
     ]
