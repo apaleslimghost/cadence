@@ -5,13 +5,13 @@
 - [x] reactive cell references
 - [x] primitives for generating and processing observables
 - [x] visual cell ui
-  - [x] observable values
-  - [x] observable update flashing
-  - [ ] controls
-  - [ ] audionode oscilloscopes
-  - [x] data persistence
   - [ ] automerge?
   - [ ] collab?
+  - [ ] controls
+  - [x] audionode oscilloscopes
+  - [x] data persistence
+  - [x] observable update flashing
+  - [x] observable values
 - [ ] more tonejs wrappers/primitives
   - [x] samples
     - [ ] strudel banks
@@ -28,6 +28,7 @@
   - [x] LFOs/envelopes, connecting nodes to params not via observables 🤔
   - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
+  - [ ] imports
 - [ ] bugs/UI improvements
   - [x] stopping/restarting transport
   - [x] display pending observable value
@@ -38,6 +39,7 @@
   - [x] starting loops that were initialised before the transport started (should work? doesn't consistently eg on load with persistent data)
   - [x] need to unsubscribe/stop(?) when editing a cell or if its dependencies update, not just on delete
   - [x] deleting a synth stops a seq it's connected to
+  - [ ] deleting a seq doesn't stop it
 - [ ] midi
   - [ ] CCs
   - [ ] notes

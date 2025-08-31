@@ -9,8 +9,12 @@ html, body, #root {
 	height: 100%;
 }
 
-.handsontable {
-  font-family: 'Iosevka Curly', monospace;
+:root {
+  --font-mono: 'Iosevka Curly', monospace;
+}
+
+.handsontable, .cm-editor .cm-content {
+  font-family: var(--font-mono);
   font-variant-ligatures: discretionary-ligatures;
 }
 
@@ -48,4 +52,26 @@ html, body, #root {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+.htCodemirror {
+  position: absolute;
+  width: auto;
+  z-index: 300;
+}
+
+.cm-editor {
+  box-sizing: border-box;
+  background: var(--ht-cell-editor-background-color);
+  color: var(--ht-cell-editor-foreground-color);
+  border: 1px solid var(--ht-cell-editor-border-color);
+}
+
+.cm-editor.cm-focused {
+  border: 2px solid var(--ht-cell-editor-border-color);
+  box-shadow: 0 0 5px 2px var(--ht-cell-editor-shadow-color);
+}
+
+.cm-focused .cm-cursor {
+  border-left-color: currentColor;
 }

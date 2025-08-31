@@ -1,14 +1,8 @@
-import parse, { type Atom, type SExpr } from "s-expression";
+import parse, { type Atom, type SExpr } from "./parser";
 
 const DEBUG = false;
 
 type Scope = Record<string, unknown>
-
-parse.Parser.quotes = /['`,←]/;
-parse.Parser.quotes_map = {
-  ...parse.Parser.quotes_map,
-  '←': 'subscribe'
-}
 
 type Specials = Record<string, (expr: SExpr, scope: Scope, specials: Specials) => any>
 
@@ -65,6 +59,12 @@ const defaultSpecials: Specials = {
     }
     return returnVal;
   },
+
+  list(expr, scope, specials) {
+    return expr.map(
+      atom => evaluate(atom, scope, specials)
+    )
+  }
 };
 
 export const serialise = (expression: Atom): string =>
