@@ -1,4 +1,4 @@
-import parse, { type Atom, type SExpr } from "s-expression";
+import parse, { type Atom, type SExpr } from "./parser";
 
 const DEBUG = false;
 
