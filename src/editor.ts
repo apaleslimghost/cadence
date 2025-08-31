@@ -153,6 +153,9 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 	}
 
 	close() {
-		if(this.wrapper) this.wrapper.style.display = 'none';
+		if(this.wrapper) {
+			this.wrapper.style.display = 'none';
+			this.setValue('')
+		}
 	}
 }
