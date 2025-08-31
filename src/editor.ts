@@ -20,17 +20,6 @@ const theme = HighlightStyle.define([
 	{ tag: t.labelName, color: c.amber[7] }
 ])
 
-// - [x] deleting a cell spawns an empty unfocused editor in that cell
-// - [x] enter shortcut doesn't work in an editor created by doubleclicking instead of typing
-// - [ ] shouldn't autoclose single quotes
-// - [ ] highlighting for:
-//   - [ ] function calls
-//   - [ ] operator-like functions
-//   - [ ] numbers
-//   - [ ] symbols/other quoted expressions
-//   - [ ] numbers
-
-
 export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 	editor: EditorView
 	wrapper: HTMLDivElement
