@@ -13,7 +13,7 @@ import c from './palette'
 let instance: CodeMirrorEditor
 
 const theme = HighlightStyle.define([
-	{ tag: t.paren, color: c.steel[5] },
+	{ tag: t.paren, color: c.steel[4] },
 	{ tag: t.function(t.variableName), color: c.apple[5] },
 	{ tag: t.string, color: c.lemon[8] },
 	{ tag: t.number, color: c.violet[5] },

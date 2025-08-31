@@ -13,7 +13,8 @@ const parser = buildParser(`
     String |
     Symbol |
     Number |
-    Application { "(" expression* ")" }
+    Application { "(" expression* ")" } |
+    List { "[" expression* "]" }
   }
 
   quoted {
@@ -31,7 +32,7 @@ const parser = buildParser(`
 
     space { $[ \\t\\n\\r]+ }
 
-    "(" ")"
+    "(" ")" "[" "]"
 
     @precedence { Number, Identifier }
   }
@@ -54,13 +55,13 @@ export const CadenceLanguage = LRLanguage.define({
         String: t.string,
         Symbol: t.labelName,
         Number: t.number,
-        "( )": t.paren
+        "( ) [ ]": t.paren
       })
     ]
   }),
   languageData: {
     closeBrackets: {
-      brackets: ['(', '"']
+      brackets: ['(', '"', '[']
     }
   }
 })
