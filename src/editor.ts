@@ -20,7 +20,7 @@ const theme = HighlightStyle.define([
 ])
 
 // - [x] deleting a cell spawns an empty unfocused editor in that cell
-// - [ ] enter shortcut doesn't work in an editor created by typing instead of doubleclicking
+// - [ ] enter shortcut doesn't work in an editor created by doubleclicking instead of typing
 // - [ ] shouldn't autoclose single quotes
 // - [ ] highlighting for:
 //   - [ ] function calls
@@ -48,12 +48,33 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 						map => !['Escape', 'Enter'].includes(map.key!)
 					),
 					...historyKeymap,
-				]),
+				].map(b => ({
+					...b,
+					run(view) {
+						console.log(b.mac ?? b.key, b.run?.name)
+						return b.run?.(view) ?? false
+					}
+				}))),
 				closeBrackets(),
 				bracketMatching(),
 				syntaxHighlighting(theme),
 				Cadence(),
 				Prec.high(keymap.of(closeBracketsKeymap)),
+				Prec.highest(keymap.of([{
+					key: 'Enter',
+					run: (view) => {
+						this.finishEditing()
+						// @ts-expect-error _getEditorManager is private
+						this.hot._getEditorManager().moveSelectionAfterEnter(view, { shiftKey: false })
+						return true
+					}
+				}, {
+					key: 'Escape',
+					run: (view) => {
+						this.finishEditing(true)
+						return true
+					}
+				}]))
 			],
 			parent: this.wrapper
 		})
