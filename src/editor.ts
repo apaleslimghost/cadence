@@ -20,7 +20,7 @@ const theme = HighlightStyle.define([
 ])
 
 // - [x] deleting a cell spawns an empty unfocused editor in that cell
-// - [ ] enter shortcut doesn't work in an editor created by doubleclicking instead of typing
+// - [x] enter shortcut doesn't work in an editor created by doubleclicking instead of typing
 // - [ ] shouldn't autoclose single quotes
 // - [ ] highlighting for:
 //   - [ ] function calls
