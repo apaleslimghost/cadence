@@ -11,7 +11,7 @@ class ParseError extends Error {
 
 class Parser {
     static not_whitespace_or_end = /^(\S|$)/;
-    static space_quote_paren_escaped_or_end = /^(\s|\\|"|'|`|,|\(|\)|$)/;
+    static space_quote_paren_escaped_or_end = /^(\s|\\|"|'|`|,|\(|\)|\[|\]|$)/;
     static string_or_escaped_or_end = /^(\\|"|$)/;
     static string_delimiters = /["]/;
     static quotes = /['`,]/;
@@ -20,6 +20,11 @@ class Parser {
         '`':  'quasiquote',
         ',':  'unquote'
     };
+    static open_parens = /[\(\[]/
+    static close_parens: Record<string, string> = {
+        '(': ')',
+        '[': ']'
+    }
 
     private _line: number;
     private _col: number;
@@ -180,7 +185,9 @@ class Parser {
             return this.quoted();
         }
 
-        let expr = this.peek() == '(' ? this.list() : this.atom();
+        let expr = Parser.open_parens.test(this.peek())
+            ? this.list()
+            : this.atom();
 
         // ignore whitespace
         this.until(Parser.not_whitespace_or_end);
@@ -189,8 +196,9 @@ class Parser {
     }
 
     list() {
-        if (this.peek() != '(') {
-            return this.error('Expected `(` - saw `' + this.peek() + '` instead.');
+        const open = this.peek()
+        if (!Parser.open_parens.test(open)) {
+            return this.error('Expected `(` or `[` - saw `' + this.peek() + '` instead.');
         }
 
         this.consume();
@@ -211,14 +219,15 @@ class Parser {
             }
         }
 
-        if (this.peek() != ')') {
-            return this.error('Expected `)` - saw: `' + this.peek() + '`');
+        const close = Parser.close_parens[open]
+        if (this.peek() != close) {
+            return this.error('Expected `' + close + '` - saw: `' + this.peek() + '`');
         }
 
         // consume that closing paren
         this.consume();
 
-        return ls;
+        return open === '[' ? ['list', ...ls] : ls;
     }
 }
 

@@ -59,6 +59,12 @@ const defaultSpecials: Specials = {
     }
     return returnVal;
   },
+
+  list(expr, scope, specials) {
+    return expr.map(
+      atom => evaluate(atom, scope, specials)
+    )
+  }
 };
 
 export const serialise = (expression: Atom): string =>
