@@ -12,7 +12,12 @@ const parser = buildParser(`
     Identifier |
     String |
     Symbol |
+    Number |
     Application { "(" expression* ")" }
+  }
+
+  quoted {
+    "'" expression
   }
 
   @tokens {
@@ -22,9 +27,13 @@ const parser = buildParser(`
 
     Symbol { "'" $[a-zA-Z_\\-0-9]+ }
 
+    Number { @digit+ ( "." @digit+ )? }
+
     space { $[ \\t\\n\\r]+ }
 
     "(" ")"
+
+    @precedence { Number, Identifier }
   }
 
   @detectDelim
@@ -43,7 +52,8 @@ export const CadenceLanguage = LRLanguage.define({
         Identifier: t.variableName,
         Boolean: t.bool,
         String: t.string,
-        Symbol: t.literal,
+        Symbol: t.labelName,
+        Number: t.number,
         "( )": t.paren
       })
     ]

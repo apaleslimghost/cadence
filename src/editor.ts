@@ -16,7 +16,8 @@ const theme = HighlightStyle.define([
 	{ tag: t.paren, color: c.steel[5] },
 	{ tag: t.function(t.variableName), color: c.apple[5] },
 	{ tag: t.string, color: c.lemon[8] },
-	{ tag: t.number, color: c.violet[7] },
+	{ tag: t.number, color: c.violet[5] },
+	{ tag: t.labelName, color: c.amber[7] }
 ])
 
 // - [x] deleting a cell spawns an empty unfocused editor in that cell

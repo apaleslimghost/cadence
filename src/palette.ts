@@ -1,4 +1,4 @@
-const palette: Record<string, {saturation?: number, hue: number}> = {
+const palette = {
 	steel: {saturation: 0.01, hue: 220},
 	scarlet: {hue: 9},
 	amber: {hue: 37},
@@ -16,14 +16,13 @@ const palette: Record<string, {saturation?: number, hue: number}> = {
 const colours = Object.fromEntries(Object.entries(palette).map(
 	([name, spec]) => {
 		const shades = Array.from({length: 7}, (_, i) =>
-			`oklch(${0.05 + i / 7} ${spec.saturation ?? 0.2} ${spec.hue})`
+			`oklch(${0.05 + i / 7} ${'saturation' in spec ? spec.saturation : 0.2} ${spec.hue})`
 		)
 		const pastels = Array.from({length: 3}, (_, i) =>
-			`oklch(${0.05 + 6 / 7 + i / (3 * 7)} ${(spec.saturation ?? 0.2) * (1 - (i+1) / 4)} ${spec.hue})`
+			`oklch(${0.05 + 6 / 7 + i / (3 * 7)} ${('saturation' in spec ? spec.saturation : 0.2) * (1 - (i+1) / 4)} ${spec.hue})`
 		)
 
 		for(const [i, out] of [...shades, ...pastels].entries()) {
-			console.log(out)
 			CSS.registerProperty({
 				name: `--colour-${name}-${i}`,
 				syntax: '<color>',
@@ -36,4 +35,4 @@ const colours = Object.fromEntries(Object.entries(palette).map(
 	}
 ))
 
-export default colours
+export default colours as Record<keyof typeof palette, string[]>
