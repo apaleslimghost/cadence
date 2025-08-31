@@ -67,7 +67,9 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 						// @ts-expect-error _getEditorManager is private
 						this.hot._getEditorManager().moveSelectionAfterEnter(view, { shiftKey: false })
 						return true
-					}
+					},
+					preventDefault: true,
+					stopPropagation: true
 				}, {
 					key: 'Escape',
 					run: (view) => {
