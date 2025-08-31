@@ -48,13 +48,7 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 						map => !['Escape', 'Enter'].includes(map.key!)
 					),
 					...historyKeymap,
-				].map(b => ({
-					...b,
-					run(view) {
-						console.log(b.mac ?? b.key, b.run?.name)
-						return b.run?.(view) ?? false
-					}
-				}))),
+				]),
 				closeBrackets(),
 				bracketMatching(),
 				syntaxHighlighting(theme),
@@ -110,7 +104,6 @@ export default class CodeMirrorEditor extends Handsontable.editors.BaseEditor {
 
 	open(event: Event) {
 		this.refreshDimensions()
-		console.log('open', event)
 		this.wrapper.style.display = '';
 
 		this.editor.focus()
