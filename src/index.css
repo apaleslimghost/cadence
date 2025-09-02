@@ -34,6 +34,7 @@ html, body, .panes, #root, #docs {
   font-family: var(--font-mono);
   background: var(--colour-steel-2);
   border-radius: 0.1em;
+  font-variant-ligatures: none;
 }
 
 #docs td, #docs th {
