@@ -77,7 +77,9 @@ const hot = new Handsontable(root, {
 })
 
 root.addEventListener('click', async () => {
-  await Tone.start()
-  root.classList.remove('pending')
-  hot.selectCell(0, 0)
+  if(root.classList.contains('pending')) {
+    await Tone.start()
+    root.classList.remove('pending')
+    hot.selectCell(0, 0)
+  }
 })
