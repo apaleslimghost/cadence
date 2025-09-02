@@ -1,5 +1,5 @@
 <h1 align="center">
-<a href="https://cadence.ghost.computer">
+<a href="https://cadence.id">
 <img src="etc/icon.png" alt=""><br>cadence
 </a>
 </h1>
