@@ -19,11 +19,13 @@ registerAllModules();
 const root = document.getElementById('root')!
 const docs = document.getElementById('docs')!
 const close = document.getElementById('close')!
+const icon = document.querySelector('link[rel=icon]')!
 
 if(localStorage.neverShowDocs) {
   docs.remove()
 } else {
   docs.insertAdjacentHTML('beforeend', readme.html)
+  docs.querySelector('img[src="etc/icon.png"]')!.setAttribute('src', icon.getAttribute('href')!) // lolsob
 
   close.addEventListener('click', () => {
     docs.remove()
