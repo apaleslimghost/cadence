@@ -12,8 +12,8 @@
 
 - Numbers:  `1`, `1.37`, `-2`
 - Strings: `'string`, `"longer string"`
-- Arrays & tuples of strings: `'(a b c)`
-- Referencing in arrays: <code>`(string ,value)</code>
+- Static lists/tuples of strings: `'(a b c)`
+- Dynamic lists `[A1 "b" 3]`
 - Calling functions: `(function-name ...args)`
 - Defining functions: `(λ (...argnames) ...body)`
 - Cell references: `A1`, `ZZ137`
