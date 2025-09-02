@@ -12,9 +12,26 @@ import renderer from './renderer';
 import { runCell } from './store';
 import CodeMirrorEditor from './editor';
 
+import * as readme from '../README.md'
+
 registerAllModules();
 
 const root = document.getElementById('root')!
+const docs = document.getElementById('docs')!
+const close = document.getElementById('close')!
+
+if(localStorage.neverShowDocs) {
+  docs.remove()
+} else {
+  docs.insertAdjacentHTML('beforeend', readme.html)
+
+  close.addEventListener('click', () => {
+    docs.remove()
+    if(confirm('close docs forever?')) {
+      localStorage.neverShowDocs = true
+    }
+  })
+}
 
 const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",

@@ -5,12 +5,54 @@ body {
   background: black;
 }
 
-html, body, #root {
+html, body, .panes, #root, #docs {
 	height: 100%;
 }
 
 :root {
   --font-mono: 'Iosevka Curly', monospace;
+  --font-system: system-ui, sans-serif;
+}
+
+.panes {
+  display: flex;
+}
+
+#docs {
+  width: 25vw;
+  max-width: 60rem;
+  box-sizing: border-box;
+  padding: 1rem;
+  color: var(--colour-steel-9);
+  font-family: var(--font-system);
+  overflow-y: auto;
+  border-left: 1px var(--colour-steel-2) solid;
+}
+
+#docs code {
+  font-family: var(--font-mono);
+  background: var(--colour-steel-2);
+  border-radius: 0.1em;
+}
+
+#docs td, #docs th {
+  border: 1px var(--colour-steel-2) solid;
+}
+
+#docs th, #docs td:has(strong:only-child) {
+  user-select: none;
+}
+
+#docs a {
+  color: inherit;
+}
+
+#docs a:hover {
+  color: inherit;
+}
+
+#root {
+  flex-grow: 1;
 }
 
 .handsontable, .cm-editor .cm-content {
