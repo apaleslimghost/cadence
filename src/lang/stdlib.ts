@@ -181,4 +181,6 @@ const rxlib = new Proxy({
   }
 });
 
+Object.assign(window, { rxlib })
+
 export default rxlib;
