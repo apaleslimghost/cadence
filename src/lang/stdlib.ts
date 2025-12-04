@@ -169,7 +169,8 @@ const rxlib = new Proxy({
     }
 
     return out;
-  }
+  },
+  'p': (curry(<T extends Function>(probability: number, a: T, b: T): T => (...args: Parameters<T>): ReturnType<T> => Math.random() < p ? a(...args) : b(...args)))
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
