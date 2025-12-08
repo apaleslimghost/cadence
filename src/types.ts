@@ -27,3 +27,7 @@ export type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
 export type Entries = [string, ...unknown[]][]
 
 export type SequenceEvents = (string | SequenceEvents)[]
+
+export type AbstractParam = Tone.Signal | Tone.Param
+
+export const isParam = (thing: unknown): thing is AbstractParam => thing instanceof Tone.Signal || thing instanceof Tone.Param

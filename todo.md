@@ -22,13 +22,17 @@
   - [x] oscs and filters
   - [x] effects
     - [ ] more effects
-  - [ ] chord seq
   - [x] transpose
   - [x] rests (null notes)
   - [x] LFOs/envelopes, connecting nodes to params not via observables 🤔
   - [x] easier .connect/.chain
   - [x] spreadsheet ranges for arrays
   - [ ] imports
+  - [ ] euclid
+  - [ ] more generic sequencer
+    - [ ] drum pattern seq
+    - [ ] chord/polyphonic seq
+    - [ ] sequencing sequencers (switchMap)
 - [ ] bugs/UI improvements
   - [x] stopping/restarting transport
   - [x] display pending observable value

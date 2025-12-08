@@ -170,7 +170,8 @@ const rxlib = new Proxy({
 
     return out;
   },
-  'p': (curry(<T extends Function>(probability: number, a: T, b: T): T => (...args: Parameters<T>): ReturnType<T> => Math.random() < probability ? a(...args) : b(...args)))
+  'p': (curry(<T extends Function>(probability: number, a: T, b: T): T => (...args: Parameters<T>): ReturnType<T> => Math.random() < probability ? a(...args) : b(...args))),
+  'sig': (units: Tone.Unit.UnitName = 'number', minValue = 0, maxValue = 1, value = minValue) => new Tone.Signal({ units, value, minValue, maxValue })
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {

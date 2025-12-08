@@ -131,3 +131,33 @@ html, body, .panes, #root, #docs {
 .cm-focused .cm-cursor {
   border-left-color: currentColor;
 }
+
+input[type=range], .range-value, .range-bar {
+  position: absolute;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: ew-resize;
+}
+
+.range-bar, .range-value {
+  pointer-events: none;
+}
+
+.range-value {
+  padding: var(--ht-cell-vertical-padding) var(--ht-cell-horizontal-padding);
+  text-shadow: 0 1px 1px black;
+  font-weight: 900;
+  color: white;
+}
+
+input[type=range] {
+  opacity: 0;
+}
+
+.range-bar {
+  right: auto;
+  background: var(--colour-sky-3);
+}

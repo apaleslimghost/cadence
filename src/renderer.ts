@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import { getCellKey, cellSubscriptions, cells, cellObservableSubscriptions } from './store';
 import Oscilloscope from './oscilloscope';
 import { serialise } from './serialise';
-import { isConnectable, isDisconnectable, isStoppable } from './types';
+import { isConnectable, isDisconnectable, isParam, isStoppable } from './types';
 import type Handsontable from 'handsontable'
 import colours from './palette';
 
@@ -28,7 +28,58 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 				const result = cells.get(cellKey)?.get();
 				pulse(td, colours.aqua[4]);
 
-				if (isConnectable(result)) {
+				if(isParam(result)) {
+					let range = td.querySelector('[type=range]') as HTMLInputElement;
+					let value = td.querySelector('.range-value');
+					let bar = td.querySelector('.range-bar') as HTMLSpanElement;
+
+					const isFreq = [
+						'frequency',
+						'hertz'
+					].includes(result.units)
+
+					const max =
+						isFreq ? 24000
+						: result.units === 'decibels' ? 120
+						: result.maxValue
+					const min =
+						isFreq ? 10
+						: result.units === 'decibels' ? -120
+						: result.minValue
+
+					if (!range || !value || !bar) {
+						range = document.createElement('input');
+						range.type = 'range'
+						range.min = '0'
+						range.max = '1'
+						range.step = '0.000001'
+
+						range.value = (isFreq ?
+							Math.log(result.value / min) / Math.log(max / min) :
+							(result.value - min) / (max - min)
+						).toString()
+
+						value = document.createElement('span')
+						value.classList = 'range-value'
+						value.textContent = serialise(result)
+
+						bar = document.createElement('span')
+						bar.classList = 'range-bar'
+						bar.style.width = `${(100 * range.valueAsNumber).toFixed(1)}%`
+
+						td.replaceChildren(range, bar, value);
+					}
+
+					range.addEventListener('input', () => {
+						result.value = isFreq ?
+							min * Math.pow(max / min, range.valueAsNumber) :
+							min + (max - min) * range.valueAsNumber
+
+						value.textContent = serialise(result)
+						bar.style.width = `${(100 * range.valueAsNumber).toFixed(1)}%`
+					})
+
+				} else if (isConnectable(result)) {
 					let canvas = td.querySelector('canvas');
 					if (!canvas) {
 						canvas = document.createElement('canvas');
