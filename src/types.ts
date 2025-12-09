@@ -22,7 +22,7 @@ export interface Stoppable {
 
 export const isStoppable = (thing: unknown): thing is Stoppable => (thing && typeof thing === 'object') ? ('stop' in thing && typeof thing.stop === 'function') : false
 
-export type NoteEvent = [Tone.Unit.Time, Tone.Unit.Frequency | null]
+export type NoteEvent = [Tone.TimeClass, Tone.Unit.Frequency | null]
 
 export type Entries = [string, ...unknown[]][]
 

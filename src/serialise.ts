@@ -1,3 +1,4 @@
+import { isPlainObject } from 'lodash';
 import type { Atom } from 's-expression';
 import * as Tone from 'tone';
 import { TransportClass } from 'tone/build/esm/core/clock/Transport';
@@ -80,6 +81,10 @@ export const serialise = (expression: Result): string => {
 
   if (expression == null) {
     return '🔃 empty';
+  }
+
+  if(isPlainObject(expression)) {
+    return serialise(Object.entries(expression))
   }
 
   return Object.getPrototypeOf(expression ?? Object.create(null))?.constructor?.name

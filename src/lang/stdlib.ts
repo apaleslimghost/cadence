@@ -1,7 +1,9 @@
 import _, { curry } from 'lodash';
-import { defer, share, finalize, map, Observable, switchMap, fromEventPattern, withLatestFrom, filter } from 'rxjs';
+import { defer, share, finalize, map, Observable, switchMap, fromEventPattern, withLatestFrom, filter, zip, of, zipWith, repeat, from } from 'rxjs';
 import * as Tone from 'tone';
 import {euclid} from '@tonaljs/rhythm-pattern'
+import * as Mode from '@tonaljs/mode'
+import * as Chord from '@tonaljs/chord'
 import { serialise } from '../serialise';
 import { Entries, isTimed, NoteEvent, SequenceEvents, WithCallback } from '../types';
 import { cells, colFromLetter, getCellKey } from '../store';
@@ -103,18 +105,16 @@ const rxlib = new Proxy({
   'sample': (url: string) => {
     return new Tone.Player(url);
   },
-  'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
-    let seq: Tone.Sequence, onStart: () => void, onStop: () => void;
-
-    return defer(
+  'pat': (subdivision: Tone.Unit.Time, events: SequenceEvents) =>
+    defer(
       () => {
-        seq = new Tone.Sequence({
+        const seq = new Tone.Sequence({
           events,
           subdivision
         }).start('@1m');
 
-        onStart = () => seq.start('@1m');
-        onStop = () => seq.stop();
+        const onStart = () => seq.start('@1m');
+        const onStop = () => seq.stop();
 
         Tone.getTransport().on('start', onStart);
         Tone.getTransport().on('stop', onStop);
@@ -134,24 +134,66 @@ const rxlib = new Proxy({
         Tone.TransportTime(time),
         note
       ])
-    );
-  },
+    ),
+  'seq': (interval: Tone.Unit.Time, events: any[]) =>
+    defer(
+      () => {
+        const seq = new Tone.Loop({
+          interval
+        }).start('@1m');
+        let index = 0;
+
+        const onStart = () => seq.start('@1m');
+        const onStop = () => seq.stop();
+
+        Tone.getTransport().on('start', onStart);
+        Tone.getTransport().on('stop', onStop);
+
+        return fromToneCallback(seq).pipe(
+          share(),
+          map(time => {
+            const event = events[index]
+            index = (index + 1) % events.length
+            return [time, event]
+          }),
+          finalize(() => {
+            Tone.getTransport().off('start', onStart);
+            Tone.getTransport().off('stop', onStop);
+            seq.stop();
+          })
+        );
+      }
+    ).pipe(
+      share(),
+      map(([time, event]) => [
+        Tone.TransportTime(time),
+        event
+      ])
+    ),
   'play': curry((synth: Tone.Synth | Tone.Player, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
     if (note) {
       if (synth instanceof Tone.PolySynth) {
-        synth.triggerAttackRelease(Array.isArray(note) ? note : [note], duration, time);
+        synth.triggerAttackRelease(Array.isArray(note) ? note : [note], duration, time.toBarsBeatsSixteenths());
       } else if (synth instanceof Tone.PluckSynth) {
-        synth.triggerAttack(note, time);
+        synth.triggerAttack(
+          Array.isArray(note) ? note[0] : note,
+          time.toBarsBeatsSixteenths()
+        );
       } else if (synth instanceof Tone.Synth) {
-        synth.triggerAttackRelease(note, duration, time);
+        synth.triggerAttackRelease(
+          Array.isArray(note) ? note[0] : note,
+          duration,
+          time.toBarsBeatsSixteenths()
+        );
       } else if (synth.loaded) {
-        synth.start(time, 0, duration);
+        synth.start(time.toBarsBeatsSixteenths(), 0, duration);
       }
     }
 
     return [Tone.Time(duration), note];
   }),
-  '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
+  '$>': <T, U>(items: Observable<T> | T[], fn: (t: T) => U) =>
+    Array.isArray(items) ? items.map(fn) : items.pipe(map(fn)),
   '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
   'i': <T>(i: T) => i,
   'dest': Tone.getDestination(),
@@ -191,8 +233,25 @@ const rxlib = new Proxy({
         Boolean(isTimed(a) ? a[1] : a) &&
         Boolean(isTimed(b) ? b[1] : b)
     ),
-    map(([_, e]) => e)
-  )
+    map(([a, b]) =>
+      isTimed(a) && isTimed(b) ? [a[0], b[1]] : b
+    )
+  ),
+  key: curry(
+    (tonic: string, mode: string) => ({
+      tonic, mode,
+      chords: Mode.triads(mode, tonic),
+      notes: Mode.notes(mode, tonic)
+    })
+  ),
+  chord: curry(
+    (key: {chords: string[]}, octave: number, chord: number) =>
+      Chord.notes(key.chords[chord % key.chords.length]).map(n => n + (octave + Math.floor(chord / key.chords.length)))
+  ),
+  note: curry(
+    (key: {notes: string[]}, octave: number, note: number) =>
+      key.notes[note % key.notes.length] + (octave + Math.floor(note / key.notes.length))
+  ),
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
