@@ -131,7 +131,7 @@ const rxlib = new Proxy({
       }
     ).pipe(
       map(([time, note]) => [
-        Tone.Time(time),
+        Tone.TransportTime(time),
         note
       ])
     );

@@ -37,8 +37,12 @@ export const serialise = (expression: Result): string => {
       return expression.toNote().toLowerCase();
     }
 
-    if (expression instanceof Tone.TimeClass) {
+    if (expression instanceof Tone.TransportTimeClass) {
       return expression.toBarsBeatsSixteenths();
+    }
+
+    if (expression instanceof Tone.TimeClass) {
+      return expression.toNotation();
     }
 
     if (expression instanceof Tone.Param || expression instanceof Tone.Signal) {
