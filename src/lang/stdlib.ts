@@ -71,9 +71,20 @@ const rxlib = new Proxy({
     lfo.type = type;
     return lfo;
   },
-  'synth': (...options: Entries) => {
-    return new Tone.Synth(lispObj(...options));
+  'poly': (voice: any, ...options: Entries) => {
+    return new Tone.PolySynth({
+      voice,
+      ...lispObj(...options)
+    });
   },
+  'mono': (voice: any, ...options: Entries) => {
+    return new voice(lispObj(...options));
+  },
+  'synth': Tone.Synth,
+  'metal': Tone.MetalSynth,
+  'fm': Tone.FMSynth,
+  'membrane': Tone.MembraneSynth,
+  'am': Tone.AMSynth,
   'pluck': (...options: Entries) => {
     return new Tone.PluckSynth(lispObj(...options));
   },
@@ -127,7 +138,9 @@ const rxlib = new Proxy({
   },
   'play': curry((synth: Tone.Synth | Tone.Player, duration: Tone.Unit.Time, [time, note]: NoteEvent) => {
     if (note) {
-      if (synth instanceof Tone.Synth) {
+      if (synth instanceof Tone.PolySynth) {
+        synth.triggerAttackRelease(Array.isArray(note) ? note : [note], duration, time);
+      } else if (synth instanceof Tone.Synth) {
         synth.triggerAttackRelease(note, duration, time);
       } else if (synth.loaded) {
         synth.start(time, 0, duration);
@@ -177,7 +190,7 @@ const rxlib = new Proxy({
         Boolean(isTimed(b) ? b[1] : b)
     ),
     map(([_, e]) => e)
-  ),
+  )
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
