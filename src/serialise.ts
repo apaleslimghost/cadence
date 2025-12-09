@@ -15,6 +15,18 @@ function reduceRatio(numerator: number, denominator: number){
 // TODO
 type Result = unknown
 
+const unitMap: Partial<Record<Tone.Unit.UnitName, string>> = {
+  number: '',
+  decibels: 'dB',
+  gain: '',
+  positive: '',
+  frequency: 'Hz',
+  degrees: '°',
+  radians: 'rad',
+  hertz: 'Hz',
+  cents: '¢'
+}
+
 export const serialise = (expression: Result): string => {
   if (Array.isArray(expression)) {
     return `(${expression.map(serialise).join(" ")})`;
@@ -30,7 +42,9 @@ export const serialise = (expression: Result): string => {
     }
 
     if (expression instanceof Tone.Param || expression instanceof Tone.Signal) {
-      return expression.value + expression.units;
+      return expression.value.toFixed(
+        expression.value ? Math.max(0, 5 - Math.ceil(Math.log10(expression.value))) : 0
+      ) + (unitMap[expression.units] ?? '');
     }
 
     if (expression instanceof TransportClass) {
