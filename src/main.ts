@@ -35,6 +35,9 @@ if(localStorage.neverShowDocs) {
   })
 }
 
+const decoder = new TextDecoder()
+const encoder = new TextEncoder()
+
 const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
   data: [[]],
@@ -50,11 +53,16 @@ const hot = new Handsontable(root, {
   autoRowSize: false,
   autoColumnSize: false,
   wordWrap: false,
-  persistentState: true,
   afterInit(this: Handsontable) {
-    const loaded = { value: undefined }
-    this.getPlugin('persistentState').loadValue('tableData', loaded)
-    const data = loaded.value ?? [[]]
+    let loaded;
+
+    if(location.hash.length > 1) {
+      try {
+        loaded = JSON.parse(decoder.decode(Uint8Array.from(atob(location.hash.slice(1)), (i) => i.charCodeAt(0))))
+      } catch {}
+    }
+
+    const data = loaded ?? [[]]
     this.updateData(data)
     for(const [rowNum, col] of data.entries()) {
       for(const [colNum, cell] of col.entries()) {
@@ -64,7 +72,7 @@ const hot = new Handsontable(root, {
   },
   afterChange(this: Handsontable, changes, source) {
     if (source !== 'loadData' && source !== 'updateData') {
-      this.getPlugin('persistentState').saveValue('tableData', this.getData())
+      location.hash = btoa(String.fromCharCode(...encoder.encode(JSON.stringify(this.getData()))))
     }
 
     for(const [row, column, oldValue, newValue] of changes ?? []) {
