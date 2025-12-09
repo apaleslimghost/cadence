@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import { getCellKey, cellSubscriptions, cells, cellObservableSubscriptions } from './store';
 import Oscilloscope from './oscilloscope';
 import { serialise } from './serialise';
-import { isConnectable, isDisconnectable, isParam, isStoppable } from './types';
+import { isConnectable, isDisconnectable, isParam, isStoppable, isTimed } from './types';
 import type Handsontable from 'handsontable'
 import colours from './palette';
 
@@ -93,7 +93,9 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 					td.textContent = '💤 pending';
 					cellObservableSubscriptions[cellKey]?.unsubscribe();
 					cellObservableSubscriptions[cellKey] = result.subscribe((args) => {
-						pulse(td, colours.fuchsia[4]);
+						if(isTimed(args) ? args[1] : args) {
+							pulse(td, colours.fuchsia[4]);
+						}
 						td.textContent = serialise(args);
 					});
 				} else {

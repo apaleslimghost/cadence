@@ -31,3 +31,11 @@ export type SequenceEvents = (string | SequenceEvents)[]
 export type AbstractParam = Tone.Signal | Tone.Param
 
 export const isParam = (thing: unknown): thing is AbstractParam => thing instanceof Tone.Signal || thing instanceof Tone.Param
+
+
+export type TimedEvent<Event> = [Tone.TimeClass, Event]
+
+export const isTimed = (thing: unknown): thing is TimedEvent<unknown> =>
+  Array.isArray(thing)
+  && thing.length === 2
+  && thing[0] instanceof Tone.TimeClass
