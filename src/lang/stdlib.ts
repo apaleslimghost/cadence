@@ -25,14 +25,14 @@ const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEve
 )
 
 const alignSequence = (subdivision: Tone.Unit.Time, length: number) => {
- const seqDuration = Tone.Time(subdivision).toTicks() * length;
-    const quantStart = '@' + subdivision;
-    const transportProgress = Tone.getTransport().toTicks() / seqDuration;
-    const repeat = Math.floor(transportProgress);
-    const loopProgress = transportProgress - repeat;
-    const startOffset = Math.floor(loopProgress * length);
+  const seqDuration = Tone.Time(subdivision).toTicks() * length;
+  const quantStart = '@' + subdivision;
+  const transportProgress = Tone.getTransport().toTicks() / seqDuration;
+  const repeat = Math.floor(transportProgress);
+  const loopProgress = transportProgress - repeat;
+  const startOffset = Math.floor(loopProgress * length);
 
-    return [quantStart, startOffset] as const
+  return [quantStart, startOffset] as const
 }
 
 const rxlib = new Proxy({
@@ -104,16 +104,16 @@ const rxlib = new Proxy({
     return new Tone.Player(url);
   },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
-    const [quantStart, startOffset] = alignSequence(subdivision, events.length)
-
     let seq: Tone.Sequence, onStart: () => void, onStop: () => void;
 
     return defer(
       () => {
+        const [quantStart, startOffset] = alignSequence(subdivision, events.length)
         seq = new Tone.Sequence({
           events,
           subdivision
         }).start(quantStart, startOffset);
+
         onStart = () => seq.start(quantStart, startOffset);
         onStop = () => seq.stop();
 
@@ -130,6 +130,7 @@ const rxlib = new Proxy({
         );
       }
     ).pipe(
+      share(),
       map(([time, note]) => [
         Tone.TransportTime(time),
         note
