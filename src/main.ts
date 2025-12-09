@@ -8,11 +8,13 @@ import { registerAllModules } from 'handsontable/registry';
 
 import * as Tone from 'tone'
 
+
 import renderer from './renderer';
-import { runCell } from './store';
+import { handle, repo, runCell } from './store';
 import CodeMirrorEditor from './editor';
 
 import * as readme from '../README.md'
+import { DocHandle, isValidAutomergeUrl } from '@automerge/automerge-repo';
 
 registerAllModules();
 
@@ -38,6 +40,18 @@ if(localStorage.neverShowDocs) {
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 
+function updateData(hot: Handsontable) {
+  const { data } = handle.doc()
+
+  hot.updateData(data)
+
+  for(const [rowNum, col] of data.entries()) {
+    for(const [colNum, cell] of col.entries()) {
+      runCell(colNum, rowNum, cell)
+    }
+  }
+}
+
 const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
   data: [[]],
@@ -54,25 +68,13 @@ const hot = new Handsontable(root, {
   autoColumnSize: false,
   wordWrap: false,
   afterInit(this: Handsontable) {
-    let loaded;
-
-    if(location.hash.length > 1) {
-      try {
-        loaded = JSON.parse(decoder.decode(Uint8Array.from(atob(location.hash.slice(1)), (i) => i.charCodeAt(0))))
-      } catch {}
-    }
-
-    const data = loaded ?? [[]]
-    this.updateData(data)
-    for(const [rowNum, col] of data.entries()) {
-      for(const [colNum, cell] of col.entries()) {
-        runCell(colNum, rowNum, cell)
-      }
-    }
+    updateData(this)
   },
   afterChange(this: Handsontable, changes, source) {
     if (source !== 'loadData' && source !== 'updateData') {
-      location.hash = btoa(String.fromCharCode(...encoder.encode(JSON.stringify(this.getData()))))
+      handle.change(doc => {
+        doc.data = this.getData()
+      })
     }
 
     for(const [row, column, oldValue, newValue] of changes ?? []) {
@@ -90,4 +92,8 @@ root.addEventListener('click', async () => {
     root.classList.remove('pending')
     hot.selectCell(0, 0)
   }
+})
+
+handle.on('change', () => {
+  updateData(hot)
 })

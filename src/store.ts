@@ -2,6 +2,10 @@ import { SignalMap } from 'signal-utils/map';
 import { Signal } from 'signal-polyfill';
 import type { Subscription } from 'rxjs';
 
+import { DocHandle, Repo, isValidAutomergeUrl } from "@automerge/automerge-repo"
+import { IndexedDBStorageAdapter } from "@automerge/automerge-repo-storage-indexeddb"
+import { BrowserWebSocketClientAdapter } from "@automerge/automerge-repo-network-websocket"
+
 import evaluate from './lang/compiler'
 import lib from './lang/stdlib';
 
@@ -38,4 +42,23 @@ export function runCell(column: number, row: number, value: string | null) {
 		evaluate(value, lib)
 	 ))
   }
+}
+
+export const repo = new Repo({
+  storage: new IndexedDBStorageAdapter("automerge"),
+  network: [new BrowserWebSocketClientAdapter("wss://sync.automerge.org")],
+})
+
+type RepoState = {
+  data: any[][]
+}
+
+const docUrl = window.location.hash.slice(1)
+export let handle: DocHandle<RepoState>
+
+if (docUrl && isValidAutomergeUrl(docUrl)) {
+  handle = await repo.find<RepoState>(docUrl)
+} else {
+  handle = repo.create<RepoState>({ data: [[]] })
+  window.location.hash = handle.url
 }
