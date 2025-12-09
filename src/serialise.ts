@@ -38,7 +38,7 @@ export const serialise = (expression: Result): string => {
     }
 
     if (expression instanceof Tone.TransportTimeClass) {
-      return expression.toBarsBeatsSixteenths();
+      return Tone.TransportTime(expression.quantize('16n')).toBarsBeatsSixteenths();
     }
 
     if (expression instanceof Tone.TimeClass) {
