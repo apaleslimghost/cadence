@@ -74,7 +74,7 @@ const rxlib = new Proxy({
   'poly': (voice: any, ...options: Entries) => {
     return new Tone.PolySynth({
       voice,
-      ...lispObj(...options)
+      options: lispObj(...options)
     });
   },
   'mono': (voice: any, ...options: Entries) => {
@@ -140,6 +140,8 @@ const rxlib = new Proxy({
     if (note) {
       if (synth instanceof Tone.PolySynth) {
         synth.triggerAttackRelease(Array.isArray(note) ? note : [note], duration, time);
+      } else if (synth instanceof Tone.PluckSynth) {
+        synth.triggerAttack(note, time);
       } else if (synth instanceof Tone.Synth) {
         synth.triggerAttackRelease(note, duration, time);
       } else if (synth.loaded) {
