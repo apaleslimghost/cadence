@@ -58,7 +58,7 @@ export const serialise = (expression: Result): string => {
         sig[0] *= mul;
         sig[1] *= mul;
       }
-      return serialise(['⏯️', expression.bpm.toString(), sig.toString()]);
+      return serialise(['⏯️', expression.bpm.value, sig]);
     }
 
     if (expression instanceof ToneClass) {
