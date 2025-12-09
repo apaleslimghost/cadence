@@ -196,6 +196,7 @@ const rxlib = new Proxy({
     Array.isArray(items) ? items.map(fn) : items.pipe(map(fn)),
   '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
   'i': <T>(i: T) => i,
+  'k': <T>(k: T) => () => k,
   'dest': Tone.getDestination(),
   ':': (from: string, to: string) => {
     const [fromMatch, _fromCol, _fromRow] = /([A-Z]+)(\d+)/.exec(from) ?? [];
