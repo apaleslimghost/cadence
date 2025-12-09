@@ -1,9 +1,9 @@
 import _, { curry } from 'lodash';
-import { defer, share, finalize, map, Observable, switchMap, fromEventPattern } from 'rxjs';
+import { defer, share, finalize, map, Observable, switchMap, fromEventPattern, withLatestFrom, filter } from 'rxjs';
 import * as Tone from 'tone';
 import {euclid} from '@tonaljs/rhythm-pattern'
 import { serialise } from '../serialise';
-import { Entries, NoteEvent, SequenceEvents, WithCallback } from '../types';
+import { Entries, isTimed, NoteEvent, SequenceEvents, WithCallback } from '../types';
 import { cells, colFromLetter, getCellKey } from '../store';
 
 const isPair = (a: unknown) => Array.isArray(a) && a.length === 2
@@ -23,17 +23,6 @@ const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEve
   () => tone.callback = () => {},
   (...args) => args as T
 )
-
-const alignSequence = (subdivision: Tone.Unit.Time, length: number) => {
-  const seqDuration = Tone.Time(subdivision).toTicks() * length;
-  const quantStart = '@' + subdivision;
-  const transportProgress = Tone.getTransport().toTicks() / seqDuration;
-  const repeat = Math.floor(transportProgress);
-  const loopProgress = transportProgress - repeat;
-  const startOffset = Math.floor(loopProgress * length);
-
-  return [quantStart, startOffset] as const
-}
 
 const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
@@ -108,13 +97,12 @@ const rxlib = new Proxy({
 
     return defer(
       () => {
-        const [quantStart, startOffset] = alignSequence(subdivision, events.length)
         seq = new Tone.Sequence({
           events,
           subdivision
-        }).start(quantStart, startOffset);
+        }).start('@1m');
 
-        onStart = () => seq.start(quantStart, startOffset);
+        onStart = () => seq.start('@1m');
         onStop = () => seq.stop();
 
         Tone.getTransport().on('start', onStart);
@@ -180,7 +168,16 @@ const rxlib = new Proxy({
   },
   'p': (curry(<T extends Function>(probability: number, a: T, b: T): T => (...args: Parameters<T>): ReturnType<T> => Math.random() < probability ? a(...args) : b(...args))),
   'sig': (units: Tone.Unit.UnitName = 'number', minValue = 0, maxValue = 1, value = minValue) => new Tone.Signal({ units, value, minValue, maxValue }),
-  euclid
+  euclid,
+  zip: <T, U>(a: Observable<T>, b: Observable<U>) => a.pipe(
+    withLatestFrom(b),
+    filter(
+      ([a, b]) =>
+        Boolean(isTimed(a) ? a[1] : a) &&
+        Boolean(isTimed(b) ? b[1] : b)
+    ),
+    map(([_, e]) => e)
+  ),
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
