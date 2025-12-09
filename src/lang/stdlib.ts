@@ -1,6 +1,7 @@
 import _, { curry } from 'lodash';
 import { defer, share, finalize, map, Observable, switchMap, fromEventPattern } from 'rxjs';
 import * as Tone from 'tone';
+import {euclid} from '@tonaljs/rhythm-pattern'
 import { serialise } from '../serialise';
 import { Entries, NoteEvent, SequenceEvents, WithCallback } from '../types';
 import { cells, colFromLetter, getCellKey } from '../store';
@@ -22,6 +23,17 @@ const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEve
   () => tone.callback = () => {},
   (...args) => args as T
 )
+
+const alignSequence = (subdivision: Tone.Unit.Time, length: number) => {
+ const seqDuration = Tone.Time(subdivision).toTicks() * length;
+    const quantStart = '@' + subdivision;
+    const transportProgress = Tone.getTransport().toTicks() / seqDuration;
+    const repeat = Math.floor(transportProgress);
+    const loopProgress = transportProgress - repeat;
+    const startOffset = Math.floor(loopProgress * length);
+
+    return [quantStart, startOffset] as const
+}
 
 const rxlib = new Proxy({
   '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
@@ -92,12 +104,7 @@ const rxlib = new Proxy({
     return new Tone.Player(url);
   },
   'seq': (subdivision: Tone.Unit.Time, events: SequenceEvents) => {
-    const seqDuration = Tone.Time(subdivision).toTicks() * events.length;
-    const quantStart = '@' + subdivision;
-    const transportProgress = Tone.getTransport().toTicks() / seqDuration;
-    const repeat = Math.floor(transportProgress);
-    const loopProgress = transportProgress - repeat;
-    const startOffset = Math.floor(loopProgress * events.length);
+    const [quantStart, startOffset] = alignSequence(subdivision, events.length)
 
     let seq: Tone.Sequence, onStart: () => void, onStop: () => void;
 
@@ -125,7 +132,7 @@ const rxlib = new Proxy({
     ).pipe(
       map(([time, note]) => [
         Tone.Time(time),
-        note !== '_' ? Tone.Frequency(note) : null
+        note
       ])
     );
   },
@@ -138,7 +145,7 @@ const rxlib = new Proxy({
       }
     }
 
-    return [note, duration];
+    return [Tone.Time(duration), note];
   }),
   '$>': <T, U>(observable: Observable<T>, fn: (t: T) => U) => observable.pipe(map(fn)),
   '>>=': <T, U>(observable: Observable<T>, fn: (t: T) => Observable<U>) => observable.pipe(switchMap(fn)),
@@ -171,7 +178,8 @@ const rxlib = new Proxy({
     return out;
   },
   'p': (curry(<T extends Function>(probability: number, a: T, b: T): T => (...args: Parameters<T>): ReturnType<T> => Math.random() < probability ? a(...args) : b(...args))),
-  'sig': (units: Tone.Unit.UnitName = 'number', minValue = 0, maxValue = 1, value = minValue) => new Tone.Signal({ units, value, minValue, maxValue })
+  'sig': (units: Tone.Unit.UnitName = 'number', minValue = 0, maxValue = 1, value = minValue) => new Tone.Signal({ units, value, minValue, maxValue }),
+  euclid
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
