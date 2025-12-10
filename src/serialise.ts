@@ -29,15 +29,21 @@ const unitMap: Partial<Record<Tone.Unit.UnitName, string>> = {
 }
 
 export const serialise = (expression: Result): string => {
+  if(
+    expression &&
+    (typeof expression === 'object' ||
+    typeof expression === 'function') &&
+    'toSerialisable' in expression &&
+    typeof expression.toSerialisable === 'function'
+  ) {
+    return serialise(expression.toSerialisable())
+  }
+
   if (Array.isArray(expression)) {
     return `(${expression.map(serialise).join(" ")})`;
   }
 
   if (typeof expression === 'object') {
-    if(expression && 'toSerialisable' in expression && typeof expression.toSerialisable === 'function') {
-      return serialise(expression.toSerialisable())
-    }
-
     if (expression instanceof Tone.FrequencyClass) {
       return expression.toNote().toLowerCase();
     }
@@ -69,6 +75,10 @@ export const serialise = (expression: Result): string => {
     if (expression instanceof ToneClass) {
       return '🎶 ' + expression.toString();
     }
+  }
+
+  if(expression instanceof String) {
+    return JSON.stringify(expression)
   }
 
   if (typeof expression === 'number') {

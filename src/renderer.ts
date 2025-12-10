@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 import { getCellKey, cellSubscriptions, cells, cellObservableSubscriptions } from './store';
 import Oscilloscope from './oscilloscope';
 import { serialise } from './serialise';
-import { isConnectable, isDisconnectable, isParam, isStoppable, isTimed } from './types';
+import { Connectable, isConnectable, isDisconnectable, isParam, isStoppable, isTimed } from './types';
 import type Handsontable from 'handsontable'
 import colours from './palette';
 
@@ -80,15 +80,35 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 					})
 
 				} else if (isConnectable(result)) {
-					let canvas = td.querySelector('canvas');
-					if (!canvas) {
-						canvas = document.createElement('canvas');
-						canvas.width = td.clientWidth * devicePixelRatio;
-						canvas.height = td.clientHeight * devicePixelRatio;
-						td.replaceChildren(canvas);
+					 function renderOsc(node: Connectable) {
+						let canvas = td.querySelector('canvas');
+						if (!canvas) {
+							canvas = document.createElement('canvas');
+							canvas.width = td.clientWidth * devicePixelRatio;
+							canvas.height = td.clientHeight * devicePixelRatio;
+							td.replaceChildren(canvas);
+						}
+						const osc = new Oscilloscope(Tone.getContext().rawContext, node, canvas);
+						osc.run();
 					}
-					const osc = new Oscilloscope(Tone.getContext().rawContext, result, canvas);
-					osc.run();
+
+					if(result instanceof Tone.Player) {
+						if(!result.loaded && 'promise' in result && result.promise instanceof Promise) {
+							td.textContent = '⏳ loading';
+							result.promise.then(
+								() => renderOsc(result),
+								(error: unknown) => {
+									td.textContent = `⚠️ ${error}`;
+									td.setAttribute('title', `⚠️ ${error}`);
+									console.error(error);
+								}
+							)
+						} else {
+							renderOsc(result)
+						}
+					} else {
+						renderOsc(result)
+					}
 				} else if (isObservable(result)) {
 					td.textContent = '💤 pending';
 					cellObservableSubscriptions[cellKey]?.unsubscribe();

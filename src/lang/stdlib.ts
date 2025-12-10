@@ -152,7 +152,13 @@ const rxlib = new Proxy({
     return new Tone.FeedbackDelay(lispObj(...options));
   },
   'sample': (url: string) => {
-    return new Tone.Player(url);
+    const {promise, resolve, reject} = Promise.withResolvers()
+
+    return Object.assign(new Tone.Player({
+      url,
+      onload: () => resolve(null),
+      onerror: reject
+    }), { promise });
   },
   'pat': (subdivision: Tone.Unit.Time, events: SequenceEvents) =>
     defer(
@@ -302,7 +308,17 @@ const rxlib = new Proxy({
     (key: {notes: string[]}, octave: number, note: number) =>
       key.notes[note % key.notes.length] + (octave + Math.floor(note / key.notes.length))
   ),
-  rotate
+  rotate,
+  bank: (bank: string) => {
+    function b(instrument: string, index = 0) {
+      const url = `/banks/${bank}/${instrument}/${index.toString().padStart(2, '0')}.wav`
+      return rxlib.sample(url)
+    }
+
+    b.toSerialisable = () => ['bank', new String(bank)]
+
+    return b
+  }
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
