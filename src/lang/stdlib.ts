@@ -27,15 +27,64 @@ const fromToneCallback = <T extends unknown[]>(tone: WithCallback<T>) => fromEve
 )
 
 const rxlib = new Proxy({
-  '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.chain(...dests),
-  '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => source.fan(...dests),
+  '->': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => {
+    source.chain(...dests)
+
+    return {
+      toSerialisable() {
+        return [source, ...dests].flatMap(node => [node, '->']).slice(0, -1)
+      },
+      disconnect() {
+        source.disconnect(dests[0])
+        for(let i = 0; i < dests.length - 1; i++) {
+          dests[i].disconnect(dests[i + 1])
+        }
+      }
+    }
+  },
+  '=>': (source: Tone.ToneAudioNode, ...dests: Tone.ToneAudioNode[]) => {
+    source.fan(...dests)
+
+    return {
+      toSerialisable() {
+        return [source, '=>', ...dests]
+      },
+      disconnect() {
+        for(const dest of dests) {
+          source.disconnect(dest)
+        }
+      }
+    }
+  },
   '->>': (...sources: Tone.ToneAudioNode[]) => {
-    return sources.map(s => s?.toDestination());
+    sources.map(s => s?.toDestination());
+
+    return {
+      toSerialisable() {
+        return [...sources, '->', Tone.getDestination()]
+      },
+      disconnect() {
+        for(const source of sources) {
+          source.disconnect(Tone.getDestination())
+        }
+      }
+    }
   },
   '>>': (dest: Tone.ToneAudioNode, ...sources: Tone.ToneAudioNode[]) => {
     const gain = new Tone.Gain(0, 'decibels').connect(dest);
     sources.forEach(s => s?.connect(gain));
-    return gain;
+
+    return {
+      toSerialisable() {
+        return [...sources, '>>', dest]
+      },
+      disconnect() {
+        for(const source of sources) {
+          source.disconnect(gain)
+          gain.disconnect(dest)
+        }
+      }
+    }
   },
   '+': curry((a: number, b: NoteEvent | Tone.FrequencyClass | number) => {
     if (Array.isArray(b)) {
@@ -114,7 +163,7 @@ const rxlib = new Proxy({
         }).start('@1m');
 
         const onStart = () => seq.start('@1m');
-        const onStop = () => seq.stop();
+        const onStop = () => seq.stop('@1m');
 
         Tone.getTransport().on('start', onStart);
         Tone.getTransport().on('stop', onStop);
@@ -124,7 +173,7 @@ const rxlib = new Proxy({
           finalize(() => {
             Tone.getTransport().off('start', onStart);
             Tone.getTransport().off('stop', onStop);
-            seq.stop();
+            seq.stop('@1m');
           })
         );
       }
@@ -141,10 +190,10 @@ const rxlib = new Proxy({
         const seq = new Tone.Loop({
           interval
         }).start('@1m');
-        let index = 0;
+        let index = 0
 
         const onStart = () => seq.start('@1m');
-        const onStop = () => seq.stop();
+        const onStop = () => seq.stop('@1m');
 
         Tone.getTransport().on('start', onStart);
         Tone.getTransport().on('stop', onStop);
@@ -159,7 +208,7 @@ const rxlib = new Proxy({
           finalize(() => {
             Tone.getTransport().off('start', onStart);
             Tone.getTransport().off('stop', onStop);
-            seq.stop();
+            seq.stop('@1m');
           })
         );
       }

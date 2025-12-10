@@ -34,6 +34,10 @@ export const serialise = (expression: Result): string => {
   }
 
   if (typeof expression === 'object') {
+    if(expression && 'toSerialisable' in expression && typeof expression.toSerialisable === 'function') {
+      return serialise(expression.toSerialisable())
+    }
+
     if (expression instanceof Tone.FrequencyClass) {
       return expression.toNote().toLowerCase();
     }
