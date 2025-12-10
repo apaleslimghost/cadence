@@ -40,18 +40,6 @@ if(localStorage.neverShowDocs) {
 const decoder = new TextDecoder()
 const encoder = new TextEncoder()
 
-function updateData(hot: Handsontable) {
-  const { data } = handle.doc()
-
-  hot.updateData(data)
-
-  for(const [rowNum, col] of data.entries()) {
-    for(const [colNum, cell] of col.entries()) {
-      runCell(colNum, rowNum, cell)
-    }
-  }
-}
-
 const hot = new Handsontable(root, {
   className: "ht-theme-main-dark",
   data: [[]],
@@ -68,17 +56,26 @@ const hot = new Handsontable(root, {
   autoColumnSize: false,
   wordWrap: false,
   afterInit(this: Handsontable) {
-    updateData(this)
+    const { data } = handle.doc()
+
+    this.updateData(data)
+
+    for(const [rowNum, col] of data.entries()) {
+      for(const [colNum, cell] of col.entries()) {
+        runCell(colNum, rowNum, cell)
+      }
+    }
   },
   afterChange(this: Handsontable, changes, source) {
-    if (source !== 'loadData' && source !== 'updateData') {
-      handle.change(doc => {
-        doc.data = this.getData()
-      })
-    }
-
     for(const [row, column, oldValue, newValue] of changes ?? []) {
-      if(oldValue === newValue) return
+      if(oldValue === newValue && !(oldValue === null && newValue === null)) return
+
+      if (source !== 'loadData' && source !== 'updateData') {
+        handle.change(doc => {
+          doc.data[row] ??= []
+          doc.data[row][column as number] = newValue
+        })
+      }
 
       runCell(column as number, row, newValue)
     }
@@ -94,6 +91,11 @@ root.addEventListener('click', async () => {
   }
 })
 
-handle.on('change', () => {
-  updateData(hot)
+handle.on('change', (event) => {
+  for(const patch of event.patches) {
+    if(patch.action === 'put') {
+      const [, row, column] = patch.path as [string, number, number]
+      hot.setDataAtCell(row, column, event.doc.data[row][column])
+    }
+  }
 })
