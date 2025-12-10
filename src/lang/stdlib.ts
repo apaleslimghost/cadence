@@ -1,7 +1,7 @@
 import _, { curry } from 'lodash';
 import { defer, share, finalize, map, Observable, switchMap, fromEventPattern, withLatestFrom, filter, zip, of, zipWith, repeat, from } from 'rxjs';
 import * as Tone from 'tone';
-import {euclid} from '@tonaljs/rhythm-pattern'
+import {euclid, rotate} from '@tonaljs/rhythm-pattern'
 import * as Mode from '@tonaljs/mode'
 import * as Chord from '@tonaljs/chord'
 import { serialise } from '../serialise';
@@ -302,6 +302,7 @@ const rxlib = new Proxy({
     (key: {notes: string[]}, octave: number, note: number) =>
       key.notes[note % key.notes.length] + (octave + Math.floor(note / key.notes.length))
   ),
+  rotate
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
