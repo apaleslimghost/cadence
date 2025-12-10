@@ -59,6 +59,11 @@ export let handle: DocHandle<RepoState>
 if (docUrl && isValidAutomergeUrl(docUrl)) {
   handle = await repo.find<RepoState>(docUrl)
 } else {
-  handle = repo.create<RepoState>({ data: [[]] })
+  handle = repo.create<RepoState>({ data:
+    Array.from(
+      { length: 100 },
+      () => Array.from({ length: 100 }, () => null)
+    )
+  })
   window.location.hash = handle.url
 }
