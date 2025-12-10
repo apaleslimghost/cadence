@@ -190,7 +190,7 @@ const rxlib = new Proxy({
       share(),
       map(([time, note]) => [
         Tone.TransportTime(time),
-        note
+        note,
       ])
     ),
   'seq': (interval: Tone.Unit.Time, events: any[]) =>
@@ -209,7 +209,7 @@ const rxlib = new Proxy({
 
         return fromToneCallback(seq).pipe(
           share(),
-          map(time => {
+          map(([time]) => {
             const event = events[index]
             index = (index + 1) % events.length
             return [time, event]
