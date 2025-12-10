@@ -313,7 +313,7 @@ const rxlib = new Proxy({
   ),
   rotate,
   bank: (bank: string) => {
-    function b(instrument: string, index = 0) {
+    function b(instrument: string, index = 1) {
       const url = `/banks/${bank}/${instrument}/${index.toString().padStart(2, '0')}.wav`
       return rxlib.sample(url)
     }
