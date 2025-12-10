@@ -4,6 +4,7 @@ import * as Tone from 'tone';
 import {euclid, rotate} from '@tonaljs/rhythm-pattern'
 import * as Mode from '@tonaljs/mode'
 import * as Chord from '@tonaljs/chord'
+import * as Note from '@tonaljs/note'
 import { serialise } from '../serialise';
 import { Entries, isTimed, NoteEvent, SequenceEvents, WithCallback } from '../types';
 import { cells, colFromLetter, getCellKey } from '../store';
@@ -304,8 +305,12 @@ const rxlib = new Proxy({
     })
   ),
   chord: curry(
-    (key: {chords: string[]}, octave: number, chord: number) =>
-      Chord.notes(key.chords[chord % key.chords.length]).map(n => n + (octave + Math.floor(chord / key.chords.length)))
+    (key: {chords: string[]}, octave: number, chord: number) => {
+      const { intervals, tonic } = Chord.get(key.chords[chord % key.chords.length])
+      return intervals.map(
+        Note.transposeFrom(tonic! + (octave + Math.floor(chord / key.chords.length)))
+      )
+    }
   ),
   note: curry(
     (key: {notes: string[]}, octave: number, note: number) =>
