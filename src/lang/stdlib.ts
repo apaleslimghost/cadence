@@ -354,6 +354,15 @@ const rxlib = new Proxy({
     }
 
     return Object.assign(player, { promise })
+  },
+  duck: (sidechain: Tone.ToneAudioNode) => {
+    const follower = new Tone.Follower()
+    const flip = new Tone.Multiply(-1)
+    const shift = new Tone.Add(1)
+    const gain = new Tone.Gain(0.5)
+
+    sidechain.chain(follower, flip, shift, gain.gain)
+    return gain
   }
 }, {
   get(target, property, receiver) {
