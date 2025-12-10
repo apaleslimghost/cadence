@@ -133,17 +133,7 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 				console.error(error);
 			}
 		});
-	} else if (cells.has(cellKey)) {
-		try {
-			const result = cells.get(cellKey)?.get();
-			if (isDisconnectable(result)) result.disconnect();
-			if (isStoppable(result)) result.stop(0);
-		} catch { }
-
-		cellSubscriptions[cellKey]?.();
-		cellObservableSubscriptions[cellKey]?.unsubscribe();
-		delete cellSubscriptions[cellKey];
-		delete cellObservableSubscriptions[cellKey];
+	} else {
 		td.textContent = '';
 		td.removeAttribute('title');
 	}

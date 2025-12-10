@@ -10,11 +10,12 @@ import * as Tone from 'tone'
 
 
 import renderer from './renderer';
-import { handle, repo, runCell } from './store';
+import { cellObservableSubscriptions, cells, cellSubscriptions, getCellKey, handle, repo, runCell } from './store';
 import CodeMirrorEditor from './editor';
 
 import * as readme from '../README.md'
 import { DocHandle, isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { isDisconnectable, isStoppable } from './types';
 
 registerAllModules();
 
@@ -69,6 +70,21 @@ const hot = new Handsontable(root, {
   afterChange(this: Handsontable, changes, source) {
     for(const [row, column, oldValue, newValue] of changes ?? []) {
       if(oldValue === newValue && !(oldValue === null && newValue === null)) return
+
+      const cellKey = getCellKey((column as number) + 1, row + 1);
+
+      if (cells.has(cellKey)) {
+        try {
+          const result = cells.get(cellKey)?.get();
+          if (isDisconnectable(result)) result.disconnect();
+          if (isStoppable(result)) result.stop(0);
+        } catch { }
+
+        cellSubscriptions[cellKey]?.();
+        cellObservableSubscriptions[cellKey]?.unsubscribe();
+        delete cellSubscriptions[cellKey];
+        delete cellObservableSubscriptions[cellKey];
+      }
 
       if (source !== 'loadData' && source !== 'updateData') {
         handle.change(doc => {
