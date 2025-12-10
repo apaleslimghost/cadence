@@ -81,8 +81,8 @@ const rxlib = new Proxy({
       disconnect() {
         for(const source of sources) {
           source.disconnect(gain)
-          gain.disconnect(dest)
         }
+        gain.disconnect(dest)
       }
     }
   },
