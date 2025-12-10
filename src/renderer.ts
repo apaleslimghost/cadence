@@ -92,7 +92,7 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 						osc.run();
 					}
 
-					if(result instanceof Tone.Player) {
+					if(result instanceof Tone.Player || result instanceof Tone.GrainPlayer) {
 						if(!result.loaded && 'promise' in result && result.promise instanceof Promise) {
 							td.textContent = '⏳ loading';
 							result.promise.then(

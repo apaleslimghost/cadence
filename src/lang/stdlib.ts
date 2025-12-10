@@ -108,9 +108,12 @@ const rxlib = new Proxy({
   '∘': _.flow,
   'trans': (frequency: Tone.Unit.BPM, signature: [number, number] | number = 4) => {
     const trans = Tone.getTransport();
-    trans.start('0');
+    trans.stop('0');
+
     trans.bpm.value = frequency;
     trans.timeSignature = signature;
+
+    trans.start('0');
     trans.once('stop', () => trans.position = '0');
     return trans;
   },
@@ -318,6 +321,39 @@ const rxlib = new Proxy({
     b.toSerialisable = () => ['bank', new String(bank)]
 
     return b
+  },
+  loop: (url: string, length: Tone.Unit.Time) => {
+    const {promise, resolve, reject} = Promise.withResolvers()
+    const lenSeconds = Tone.Time(length).toSeconds()
+
+    const player = new Tone.GrainPlayer({
+      url,
+      loop: true,
+      grainSize: 0.1,
+      overlap: 0.01,
+      onload() {
+        resolve(null)
+        setRate()
+      },
+      onerror: reject
+    })
+
+    Tone.getTransport().on('start', setRate)
+
+    Tone.getTransport().on('stop', () => {
+      player.stop('@1m')
+    })
+
+    function setRate() {
+      if(!player.loaded) return
+      const lenSeconds = Tone.Time(length).toSeconds()
+      player.playbackRate = Tone.Time(player.buffer.duration).toSeconds() / lenSeconds
+      if(Tone.getTransport().state === 'started') {
+        player.start('@1m')
+      }
+    }
+
+    return Object.assign(player, { promise })
   }
 }, {
   get(target, property, receiver) {
