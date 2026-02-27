@@ -40,10 +40,12 @@ const renderer: Handsontable.GridSettings['renderer'] = (instance, td, row, colu
 
 					const max =
 						isFreq ? 24000
+						: result.units === 'gain' ? 1
 						: result.units === 'decibels' ? 120
 						: result.maxValue
 					const min =
 						isFreq ? 10
+						: result.units === 'gain' ? 0
 						: result.units === 'decibels' ? -120
 						: result.minValue
 
