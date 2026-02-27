@@ -368,7 +368,8 @@ const rxlib = new Proxy({
 
     sidechain.chain(follower, flip, shift, gain.gain)
     return gain
-  }
+  },
+  gain: (gain: number) => new Tone.Gain({ gain })
 }, {
   get(target, property, receiver) {
     if (typeof property === 'string' && property.match(/([A-Z]+)(\d+)/)) {
